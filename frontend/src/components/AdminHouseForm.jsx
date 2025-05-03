@@ -79,7 +79,7 @@ function AdminHouseForm({ onSubmit, initialData = null, isLoading = false, t }) 
                 buttons: [
                     {
                         label: t('adminConfirmYesMarkDelete', { default: 'Yes, Mark for Deletion' }),
-                        onClick: () => handleMarkGalleryImageForDelete(imgUrl) // Mark if confirmed
+                        onClick: () => handleMarkGalleryImageForDelete(imgUrl)
                     },
                     {
                         label: t('adminConfirmNo', { default: 'No, Cancel' }),

@@ -91,12 +91,9 @@ router.post("/", async (req, res) => {
     });
 
     if (existingBooking) {
-      return res
-        .status(409)
-        .json({
-          message:
-            "Sorry, the selected dates conflict with a confirmed booking.",
-        });
+      return res.status(409).json({
+        message: "Sorry, the selected dates conflict with a confirmed booking.",
+      });
     }
 
     const newBooking = new Booking({
@@ -159,7 +156,7 @@ router.post("/", async (req, res) => {
     }
 
     res.status(201).json({
-      message: "Booking request received successfully!", // Consider translating this backend message if frontend doesn't override
+      message: "Booking request received successfully!",
       booking: {
         id: savedBooking._id,
         houseId: savedBooking.houseId,
