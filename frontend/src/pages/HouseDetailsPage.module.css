@@ -1,0 +1,334 @@
+/* frontend/src/pages/HouseDetailsPage.module.css */
+@import 'bulma/css/bulma.min.css';
+
+.detailsPageContainer {
+  padding: 1rem;
+  margin: 0 auto;
+  max-width: 1100px;
+}
+
+.carouselSection {
+  margin-top: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.houseTitle {
+  font-size: 2.2rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+  color: var(--title-color);
+}
+
+.backLink {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--icon-color);
+  color: var(--page-bg);
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+.backLink:hover {
+   background-color: var(--text-color);
+}
+
+.pageContainer {
+  padding: 2rem;
+  text-align: center;
+}
+
+.previewSwiper {
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+
+.previewSwiper :global(.swiper-slide) {
+  width: 70%;
+  height: 450px;
+  opacity: 0.5;
+  transform: scale(0.85);
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.previewSwiper :global(.swiper-slide-active) {
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.previewSwiper :global(.swiper-slide) img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carouselImageButton {
+   display: block;
+   width: 100%;
+   height: 100%;
+   padding: 0;
+   border: none;
+   background: none;
+   cursor: pointer;
+   line-height: 0;
+   position: relative;
+   border-radius: inherit;
+   overflow: hidden;
+ }
+ .carouselImageButton::after {
+   content: '';
+   position: absolute;
+   inset: 0;
+   background-color: rgba(0,0,0,0);
+   transition: background-color 0.3s ease;
+   pointer-events: none;
+ }
+ .carouselImageButton:hover::after {
+   background-color: rgba(0, 0, 0, 0.329);
+ }
+ .carouselImageButton img {
+   width: 100%; height: 100%; object-fit: cover;
+ }
+
+
+ .previewSwiper :global(.swiper-pagination-bullet) {
+    background: var(--primary-gradient, #4db6ac);
+    opacity: 0.5;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+ }
+ .previewSwiper :global(.swiper-pagination-bullet-active) {
+    opacity: 1;
+    transform: scale(1.1);
+ }
+ .previewSwiper :global(.swiper-button-next),
+ .previewSwiper :global(.swiper-button-prev) {
+    color: var(--primary-gradient, #4db6ac);
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: background-color 0.2s ease;
+ }
+  .previewSwiper :global(.swiper-button-next::after),
+  .previewSwiper :global(.swiper-button-prev::after) {
+      font-size: 16px;
+      font-weight: bold;
+  }
+  .previewSwiper :global(.swiper-button-next:hover),
+  .previewSwiper :global(.swiper-button-prev:hover) {
+      background-color: rgba(255, 255, 255, 0.9);
+  }
+  .previewSwiper :global(.swiper-button-next),
+  .previewSwiper :global(.swiper-button-prev) {
+     display: none;
+  }
+
+.contentArea {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.descriptionBox {
+  padding: 1.5rem;
+  background-color: var(--subtle-accent);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.houseDescription {
+  text-align: left;
+  margin: 0;
+  line-height: 1.7;
+  color: var(--text-color);
+  max-width: none;
+}
+
+:global(html.dark) .descriptionBox {
+  background-color: var(--card-bg);
+}
+
+:global(html.dark) .descriptionBox .houseDescription {
+  color: var(--title-color);
+}
+
+.bookingSection {
+  padding: 1.5rem;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(var(--shadow-color-rgb), 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.sectionHeading {
+  font-size: 1.6rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--title-color);
+  margin-top: 0;
+}
+
+.bookingForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.control.has-icons-left .select select,
+.control.has-icons-left select {
+  padding-left: 2.5em !important;
+}
+
+.control.has-icons-left .icon.is-left {
+   pointer-events: none;
+}
+
+.captchaContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.recaptchaErrorText {
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.submitStatusMessageBelow {
+  width: 100%;
+  max-width: 450px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.submitStatusMessageBelow .notification {
+  margin-bottom: 0;
+  padding: 0.75rem 1rem 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+}
+.submitStatusMessageBelow .notification .delete {
+  margin-left: 0.75rem;
+}
+
+.pendingDay {
+  background-color: #e0e0e0 !important;
+  color: #888 !important;
+  cursor: pointer !important;
+  border-radius: 50%;
+  font-weight: normal !important;
+}
+
+.pendingDay:hover {
+  background-color: #d0d0d0 !important;
+}
+
+.confirmedDay {
+  background-color: #ffdddd !important;
+  color: #d8000c !important;
+  cursor: not-allowed !important;
+  text-decoration: line-through;
+  opacity: 0.7;
+  border-radius: 50%;
+  font-weight: normal !important;
+}
+.confirmedDay:hover {
+  background-color: #ffcccc !important;
+}
+
+:global(html.dark) .pendingDay {
+  background-color: rgba(90, 90, 90, 0.7) !important;
+  color: #aaa !important;
+}
+ :global(html.dark) .pendingDay:hover {
+    background-color: rgba(110, 110, 110, 0.7) !important;
+ }
+
+:global(html.dark) .confirmedDay {
+  background-color: rgba(100, 0, 0, 0.7) !important;
+  color: #ff9999 !important;
+  opacity: 0.7;
+}
+ :global(html.dark) .confirmedDay:hover {
+    background-color: rgba(120, 0, 0, 0.7) !important;
+ }
+
+:global(.react-datepicker__day--selected).pendingDay,
+:global(.react-datepicker__day--in-range).pendingDay {
+   background-color: #e0e0e0 !important;
+   color: #888 !important;
+}
+ :global(html.dark .react-datepicker__day--selected).pendingDay,
+ :global(html.dark .react-datepicker__day--in-range).pendingDay {
+    background-color: rgba(90, 90, 90, 0.7) !important;
+    color: #aaa !important;
+ }
+
+
+@media screen and (max-width: 768px) {
+
+  .captchaContainer {
+    gap: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .submitStatusMessageBelow {
+    max-width: 100%;
+  }
+
+   body .yarl__button[data-yarl-button="zoomIn"],
+   body .yarl__button[data-yarl-button="zoomOut"],
+   body .yarl__button[data-yarl-button="resetZoom"]
+   {
+      display: none !important;
+   }
+   .previewSwiper :global(.swiper-slide) {
+     width: 80%;
+     height: 300px;
+     border-radius: 8px;
+     opacity: 0.6;
+     transform: scale(0.9);
+   }
+    .previewSwiper :global(.swiper-slide-active) {
+       opacity: 1;
+       transform: scale(1);
+    }
+   .contentArea {
+     max-width: 100%;
+     margin-top: 2rem;
+     margin-bottom: 2rem;
+     gap: 1.5rem;
+   }
+   .descriptionBox {
+     padding: 1rem;
+   }
+   .bookingSection {
+     padding: 1rem;
+   }
+   .houseDescription {
+     line-height: 1.6;
+   }
+}
