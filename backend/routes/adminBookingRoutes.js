@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { parseISO, startOfDay } from "date-fns";
 import sendEmail from "../config/mailConfig.js";
 import { format } from "date-fns-tz";
+import { fr } from "date-fns/locale";
 
 const router = express.Router();
 
@@ -92,11 +93,11 @@ router.get("/", async (req, res) => {
 router.put("/:id/status", async (req, res) => {
   const bookingId = req.params.id;
   const { status: newStatus } = req.body;
+  const allowedStatuses = ["Pending", "Confirmed", "Cancelled", "Completed"];
 
   if (!mongoose.Types.ObjectId.isValid(bookingId)) {
     return res.status(400).json({ message: "Invalid booking ID format" });
   }
-  const allowedStatuses = ["Pending", "Confirmed", "Cancelled", "Completed"];
   if (!newStatus || !allowedStatuses.includes(newStatus)) {
     return res.status(400).json({
       message: `Invalid status value. Must be one of: ${allowedStatuses.join(
@@ -105,24 +106,22 @@ router.put("/:id/status", async (req, res) => {
     });
   }
 
-  let originalStatus = null;
-
   try {
-    const bookingToUpdate = await Booking.findById(bookingId);
-    if (!bookingToUpdate) {
+    const bookingBeforeUpdate = await Booking.findById(bookingId);
+    if (!bookingBeforeUpdate) {
       return res.status(404).json({ message: "Booking not found" });
     }
-    originalStatus = bookingToUpdate.status;
+    const originalStatus = bookingBeforeUpdate.status;
 
     if (newStatus === "Confirmed" && originalStatus !== "Confirmed") {
       const conflictingBooking = await Booking.findOne({
-        _id: { $ne: bookingToUpdate._id },
-        houseId: bookingToUpdate.houseId,
+        _id: { $ne: bookingBeforeUpdate._id },
+        houseId: bookingBeforeUpdate.houseId,
         status: "Confirmed",
         $or: [
           {
-            checkIn: { $lt: bookingToUpdate.checkOut },
-            checkOut: { $gt: bookingToUpdate.checkIn },
+            checkIn: { $lt: bookingBeforeUpdate.checkOut },
+            checkOut: { $gt: bookingBeforeUpdate.checkIn },
           },
         ],
       });
@@ -133,8 +132,18 @@ router.put("/:id/status", async (req, res) => {
       }
     }
 
-    bookingToUpdate.status = newStatus;
-    const updatedBooking = await bookingToUpdate.save();
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      bookingId,
+      { $set: { status: newStatus } },
+      { new: true }
+    );
+
+    if (!updatedBooking) {
+      console.error(`Booking ${bookingId} found but failed to update status.`);
+      return res
+        .status(404)
+        .json({ message: "Booking found but update failed." });
+    }
 
     if (
       (newStatus === "Confirmed" && originalStatus !== "Confirmed") ||
@@ -145,9 +154,11 @@ router.put("/:id/status", async (req, res) => {
         const timeZone = "Africa/Tunis";
         const formattedCheckIn = format(updatedBooking.checkIn, dateFormat, {
           timeZone,
+          locale: fr,
         });
         const formattedCheckOut = format(updatedBooking.checkOut, dateFormat, {
           timeZone,
+          locale: fr,
         });
         const bookingRef = updatedBooking._id.toString().slice(-6);
         const childrenText =
@@ -162,11 +173,11 @@ router.put("/:id/status", async (req, res) => {
         if (newStatus === "Confirmed") {
           userSubject = `Votre réservation Tingitingi est Confirmée ! (#${bookingRef})`;
           userHtml = `<h1>Réservation Confirmée !</h1><p>Bonjour ${updatedBooking.name},</p><p>Nous avons le plaisir de confirmer votre réservation pour <strong>${updatedBooking.houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${updatedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><p>Au plaisir de vous accueillir !</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-          userText = `Réservation Confirmée !\nBonjour ${updatedBooking.name},\nNous avons le plaisir de confirmer votre réservation pour ${updatedBooking.houseId}.\nDétails : Arrivée : ${formattedCheckIn} | Départ : ${formattedCheckOut} | Invités : ${updatedBooking.adults} Adulte(s)${childrenText}\nRef : ${bookingRef}\nAu plaisir de vous accueillir !\nCordialement, L'équipe Tingitingi`;
+          userText = `...`;
         } else {
           userSubject = `Votre réservation Tingitingi a été Annulée (#${bookingRef})`;
           userHtml = `<h1>Avis d'Annulation de Réservation</h1><p>Bonjour ${updatedBooking.name},</p><p>Ce courriel vous informe que votre demande de réservation pour <strong>${updatedBooking.houseId}</strong> du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.</p><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><p>Si vous avez des questions, veuillez nous contacter.</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-          userText = `Avis d'Annulation de Réservation\nBonjour ${updatedBooking.name},\nCe courriel vous informe que votre demande de réservation pour ${updatedBooking.houseId} du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.\nRef : ${bookingRef}\nSi vous avez des questions, veuillez nous contacter.\nCordialement, L'équipe Tingitingi`;
+          userText = `...`;
         }
 
         await sendEmail({
@@ -192,16 +203,9 @@ router.put("/:id/status", async (req, res) => {
     });
   } catch (error) {
     console.error(`Error updating status for booking ${bookingId}:`, error);
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((val) => val.message);
-      return res
-        .status(400)
-        .json({ message: "Validation failed", errors: messages });
-    }
     res.status(500).json({ message: "Server error updating booking status" });
   }
 });
-
 router.delete("/:id", async (req, res) => {
   const bookingId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(bookingId)) {
