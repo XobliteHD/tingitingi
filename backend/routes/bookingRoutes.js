@@ -1,9 +1,8 @@
 import express from "express";
 import axios from "axios";
 import Booking from "../models/Booking.js";
-import { format } from "date-fns-tz"; // Keep for email formatting
+import { format } from "date-fns-tz";
 import sendEmail from "../config/mailConfig.js";
-import { parse } from "date-fns"; // Use parse from date-fns
 
 const router = express.Router();
 
@@ -61,12 +60,10 @@ router.post("/", async (req, res) => {
 
     let checkInDateForDB, checkOutDateForDB;
     try {
-      const dateInputFormat = "yyyy-MM-dd";
+      checkInDateForDB = new Date(checkIn);
+      checkOutDateForDB = new Date(checkOut);
 
-      let parsedCheckIn = parse(checkIn, dateInputFormat, new Date());
-      let parsedCheckOut = parse(checkOut, dateInputFormat, new Date());
-
-      if (isNaN(parsedCheckIn) || isNaN(parsedCheckOut)) {
+      if (isNaN(checkInDateForDB) || isNaN(checkOutDateForDB)) {
         throw new Error("Invalid date format received.");
       }
 
@@ -96,11 +93,9 @@ router.post("/", async (req, res) => {
       );
     } catch (dateError) {
       console.error("Date parsing/validation error:", dateError);
-      return res
-        .status(400)
-        .json({
-          message: dateError.message || "Invalid check-in or check-out dates.",
-        });
+      return res.status(400).json({
+        message: dateError.message || "Invalid check-in or check-out dates.",
+      });
     }
 
     const existingBooking = await Booking.findOne({
@@ -115,12 +110,9 @@ router.post("/", async (req, res) => {
     });
 
     if (existingBooking) {
-      return res
-        .status(409)
-        .json({
-          message:
-            "Sorry, the selected dates conflict with a confirmed booking.",
-        });
+      return res.status(409).json({
+        message: "Sorry, the selected dates conflict with a confirmed booking.",
+      });
     }
 
     const newBooking = new Booking({
