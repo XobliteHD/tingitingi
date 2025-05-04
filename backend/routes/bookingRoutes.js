@@ -5,7 +5,6 @@ import Booking from "../models/Booking.js";
 import { format } from "date-fns-tz";
 import { fr } from "date-fns/locale";
 import sendEmail from "../config/mailConfig.js";
-import { parseISO, startOfDay } from "date-fns";
 
 const router = express.Router();
 
@@ -62,8 +61,8 @@ router.post("/", async (req, res) => {
 
     let checkInDateForDB, checkOutDateForDB;
     try {
-      const parsedCheckIn = parseISO(checkIn);
-      const parsedCheckOut = parseISO(checkOut);
+      checkInDateForDB = new Date(checkIn);
+      checkOutDateForDB = new Date(checkOut);
 
       if (isNaN(parsedCheckIn) || isNaN(parsedCheckOut)) {
         throw new Error("Invalid date format received.");

@@ -1,7 +1,7 @@
 import express from "express";
 import Booking from "../models/Booking.js";
 import mongoose from "mongoose";
-import { parseISO, startOfDay } from "date-fns";
+import { parseISO } from "date-fns";
 import sendEmail from "../config/mailConfig.js";
 import { format } from "date-fns-tz";
 import { fr } from "date-fns/locale";
@@ -249,12 +249,25 @@ router.put("/:id", async (req, res) => {
 
   let checkInDateUTC, checkOutDateUTC;
   try {
-    if (checkIn) checkInDateUTC = startOfDay(parseISO(checkIn));
-    if (checkOut) checkOutDateUTC = startOfDay(parseISO(checkOut));
+    if (checkIn) {
+      const parsedCheckIn = parseISO(checkIn);
+      if (isNaN(parsedCheckIn)) throw new Error("Invalid check-in date format");
+      checkInDateUTC = parsedCheckIn;
+    }
+    if (checkOut) {
+      const parsedCheckOut = parseISO(checkOut);
+      if (isNaN(parsedCheckOut))
+        throw new Error("Invalid check-out date format");
+      checkOutDateUTC = parsedCheckOut;
+    }
     if (
-      (checkIn && isNaN(checkInDateUTC)) ||
-      (checkOut && isNaN(checkOutDateUTC))
+      checkInDateUTC &&
+      checkOutDateUTC &&
+      checkOutDateUTC <= checkInDateUTC
     ) {
+      throw new Error("Check-out must be after check-in");
+    }
+    {
       throw new Error("Invalid date format");
     }
     if (
