@@ -62,19 +62,28 @@ router.post("/", async (req, res) => {
 
     let checkInDateForDB, checkOutDateForDB;
     try {
-      checkInDateForDB = new Date(checkIn);
-      checkOutDateForDB = new Date(checkOut);
+      const parsedCheckIn = parseISO(checkIn);
+      const parsedCheckOut = parseISO(checkOut);
 
-      if (isNaN(checkInDateForDB) || isNaN(checkOutDateForDB)) {
+      if (isNaN(parsedCheckIn) || isNaN(parsedCheckOut)) {
         throw new Error("Invalid date format received.");
       }
+
+      checkInDateForDB = startOfDay(parsedCheckIn);
+      checkOutDateForDB = startOfDay(parsedCheckOut);
 
       if (checkOutDateForDB <= checkInDateForDB) {
         throw new Error("Check-out date must be after check-in date.");
       }
 
-      console.log("Check-in Date for DB:", checkInDateForDB.toISOString());
-      console.log("Check-out Date for DB:", checkOutDateForDB.toISOString());
+      console.log(
+        "Normalized Check-in UTC Midnight for DB:",
+        checkInDateForDB.toISOString()
+      );
+      console.log(
+        "Normalized Check-out UTC Midnight for DB:",
+        checkOutDateForDB.toISOString()
+      );
     } catch (dateError) {
       console.error("Date parsing/validation error:", dateError);
       return res.status(400).json({
@@ -113,7 +122,10 @@ router.post("/", async (req, res) => {
     });
 
     const savedBooking = await newBooking.save();
-    console.log("Booking saved successfully:", savedBooking._id);
+    console.log(
+      "Booking saved successfully with normalized dates:",
+      savedBooking._id
+    );
 
     try {
       const dateFormat = "eeee dd MMMM yyyy";
