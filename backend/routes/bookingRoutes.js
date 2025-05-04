@@ -1,8 +1,9 @@
 import express from "express";
 import axios from "axios";
 import Booking from "../models/Booking.js";
-import { format, toDate } from "date-fns-tz";
+import { format } from "date-fns-tz"; // Keep for email formatting
 import sendEmail from "../config/mailConfig.js";
+import { parse } from "date-fns"; // Use parse from date-fns
 
 const router = express.Router();
 
@@ -27,17 +28,14 @@ router.post("/", async (req, res) => {
   try {
     const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
     if (!recaptchaSecretKey) {
-      console.error(
-        "RECAPTCHA_SECRET_KEY is not set in environment variables."
-      );
+      console.error("RECAPTCHA_SECRET_KEY is not set.");
       return res
         .status(500)
         .json({ message: "Server configuration error (reCAPTCHA)." });
     }
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`;
     const recaptchaResponse = await axios.post(verifyUrl);
-    const { success } = recaptchaResponse.data;
-    if (!success) {
+    if (!recaptchaResponse.data.success) {
       console.error(
         "reCAPTCHA verification failed:",
         recaptchaResponse.data["error-codes"]
@@ -61,22 +59,48 @@ router.post("/", async (req, res) => {
         .json({ message: "Missing required booking fields." });
     }
 
-    let checkInDateUTC, checkOutDateUTC;
-    const timeZone = "Africa/Tunis";
+    let checkInDateForDB, checkOutDateForDB;
     try {
-      checkInDateUTC = toDate(checkIn, { timeZone });
-      checkOutDateUTC = toDate(checkOut, { timeZone });
-      if (
-        isNaN(checkInDateUTC) ||
-        isNaN(checkOutDateUTC) ||
-        checkOutDateUTC <= checkInDateUTC
-      ) {
-        throw new Error("Invalid dates");
+      const dateInputFormat = "yyyy-MM-dd";
+
+      let parsedCheckIn = parse(checkIn, dateInputFormat, new Date());
+      let parsedCheckOut = parse(checkOut, dateInputFormat, new Date());
+
+      if (isNaN(parsedCheckIn) || isNaN(parsedCheckOut)) {
+        throw new Error("Invalid date format received.");
       }
+
+      checkInDateForDB = new Date(
+        Date.UTC(
+          parsedCheckIn.getFullYear(),
+          parsedCheckIn.getMonth(),
+          parsedCheckIn.getDate()
+        )
+      );
+      checkOutDateForDB = new Date(
+        Date.UTC(
+          parsedCheckOut.getFullYear(),
+          parsedCheckOut.getMonth(),
+          parsedCheckOut.getDate()
+        )
+      );
+
+      if (checkOutDateForDB <= checkInDateForDB) {
+        throw new Error("Check-out date must be after check-in date.");
+      }
+
+      console.log("Final Check-in UTC for DB:", checkInDateForDB.toISOString());
+      console.log(
+        "Final Check-out UTC for DB:",
+        checkOutDateForDB.toISOString()
+      );
     } catch (dateError) {
+      console.error("Date parsing/validation error:", dateError);
       return res
         .status(400)
-        .json({ message: "Invalid check-in or check-out dates." });
+        .json({
+          message: dateError.message || "Invalid check-in or check-out dates.",
+        });
     }
 
     const existingBooking = await Booking.findOne({
@@ -84,16 +108,19 @@ router.post("/", async (req, res) => {
       status: "Confirmed",
       $or: [
         {
-          checkIn: { $lt: checkOutDateUTC },
-          checkOut: { $gt: checkInDateUTC },
+          checkIn: { $lt: checkOutDateForDB },
+          checkOut: { $gt: checkInDateForDB },
         },
       ],
     });
 
     if (existingBooking) {
-      return res.status(409).json({
-        message: "Sorry, the selected dates conflict with a confirmed booking.",
-      });
+      return res
+        .status(409)
+        .json({
+          message:
+            "Sorry, the selected dates conflict with a confirmed booking.",
+        });
     }
 
     const newBooking = new Booking({
@@ -101,8 +128,8 @@ router.post("/", async (req, res) => {
       name,
       email,
       phone,
-      checkIn: checkInDateUTC,
-      checkOut: checkOutDateUTC,
+      checkIn: checkInDateForDB,
+      checkOut: checkOutDateForDB,
       adults: parseInt(adults, 10),
       children: parseInt(children || "0", 10),
       message: message || "",
@@ -115,9 +142,13 @@ router.post("/", async (req, res) => {
     try {
       const dateFormat = "eeee dd MMMM yyyy";
       const timeZone = "Africa/Tunis";
-      const formattedCheckIn = format(checkInDateUTC, dateFormat, { timeZone });
-      const formattedCheckOut = format(checkOutDateUTC, dateFormat, {
+      const formattedCheckIn = format(savedBooking.checkIn, dateFormat, {
         timeZone,
+        locale: fr,
+      });
+      const formattedCheckOut = format(savedBooking.checkOut, dateFormat, {
+        timeZone,
+        locale: fr,
       });
       const bookingRef = savedBooking._id.toString().slice(-6);
       const childrenText =
@@ -180,12 +211,13 @@ router.post("/", async (req, res) => {
     }
     if (
       error.message === "Invalid dates" ||
-      error.message === "Invalid check-in or check-out dates."
+      error.message === "Invalid check-in or check-out dates." ||
+      error.message === "Invalid date format received." ||
+      error.message === "Check-out date must be after check-in date."
     ) {
       return res.status(400).json({ message: error.message });
     }
     if (error.response) {
-      // Axios error reporting
       console.error("Axios Error Data:", error.response.data);
       console.error("Axios Error Status:", error.response.status);
       return res
