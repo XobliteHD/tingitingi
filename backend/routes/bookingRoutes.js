@@ -149,7 +149,7 @@ router.post("/", async (req, res) => {
       );
 
       const userSubject = `Votre demande de réservation Tingitingi reçue ! (#${bookingRef})`;
-      const userHtml = `<h1>Merci pour votre demande de réservation, ${name} !</h1><p>Nous avons bien reçu votre demande pour <strong>${houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${savedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Votre demande est actuellement <strong>En attente</strong>. Nous l'examinerons sous peu et vous contacterons pour confirmation ou plus de détails.</p><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
+      const userHtml = `<h1>Merci pour votre demande de réservation, ${name} !</h1><p>Nous avons bien reçu votre demande pour <strong>${houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${savedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Votre demande est actuellement <strong>En attente</strong>. Nous l'examinerons sous peu et vous contacterons pour confirmation ou plus de détails.</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
       const userText = `Merci pour votre demande de réservation, ${name} !\nNous avons bien reçu votre demande pour ${houseId}.\nDétails :\nArrivée : ${formattedCheckIn}\nDépart : ${formattedCheckOut}\nInvités : ${savedBooking.adults} Adulte(s)${childrenText}\nVotre demande est actuellement En attente...\nRéf : ${bookingRef}\nCordialement, L'équipe Tingitingi`;
       await sendEmail({
         to: email,
