@@ -61,14 +61,14 @@ app.use(
   })
 );
 
-app.options("*", cors());
+//app.options("*", cors());
 
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
 
 console.log("DEBUG: Defining routes START");
-/*
+
 app.use("/api/houses", houseApiRoutes);
 
 app.use("/api/others", otherApiRoutes);
@@ -86,7 +86,6 @@ app.use("/api/admin", protectAdmin);
 app.use("/api/admin/bookings", adminBookingRoutes);
 app.use("/api/admin/houses", setUploadType("house"), adminHouseRoutes);
 app.use("/api/admin/others", setUploadType("other"), adminOtherRoutes);
-*/
 
 console.log("DEBUG: Defining routes END");
 
