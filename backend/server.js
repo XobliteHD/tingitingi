@@ -67,6 +67,8 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
 
+console.log("DEBUG: Defining routes START");
+/*
 app.use("/api/houses", houseApiRoutes);
 
 app.use("/api/others", otherApiRoutes);
@@ -84,6 +86,9 @@ app.use("/api/admin", protectAdmin);
 app.use("/api/admin/bookings", adminBookingRoutes);
 app.use("/api/admin/houses", setUploadType("house"), adminHouseRoutes);
 app.use("/api/admin/others", setUploadType("other"), adminOtherRoutes);
+*/
+
+console.log("DEBUG: Defining routes END");
 
 if (process.env.NODE_ENV === "production") {
   const frontendDistPath = path.resolve(__dirname, "../frontend/dist");
@@ -95,18 +100,15 @@ if (process.env.NODE_ENV === "production") {
       path.extname(req.path) !== ".html"
     ) {
       console.log(
-        `Request path ${req.path} looks like an asset, skipping index.html send.`
+        `DEBUG: Static asset check PASSED for ${req.path}, calling next().`
       );
       return next();
     }
-    console.log(`Serving index.html for non-API GET request: ${req.path}`);
+    console.log(
+      `DEBUG: Serving index.html for non-API GET request: ${req.path}`
+    );
     const indexHtmlPath = path.resolve(frontendDistPath, "index.html");
-    res.sendFile(indexHtmlPath, (err) => {
-      if (err) {
-        console.error("Error sending index.html:", err);
-        res.status(500).send("Error serving application.");
-      }
-    });
+    res.sendFile(indexHtmlPath, (err) => {});
   });
 
   app.use(express.static(frontendDistPath));
