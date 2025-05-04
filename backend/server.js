@@ -89,12 +89,27 @@ if (process.env.NODE_ENV === "production") {
   const frontendDistPath = path.resolve(__dirname, "../frontend/dist");
   console.log(`Serving static files from: ${frontendDistPath}`);
 
-  app.use(express.static(frontendDistPath));
-
-  app.get(/^\/(?!api).*/, (req, res) => {
+  app.get(/^\/(?!api).*/, (req, res, next) => {
+    if (
+      path.extname(req.path).length > 0 &&
+      path.extname(req.path) !== ".html"
+    ) {
+      console.log(
+        `Request path ${req.path} looks like an asset, skipping index.html send.`
+      );
+      return next();
+    }
     console.log(`Serving index.html for non-API GET request: ${req.path}`);
-    res.sendFile(path.resolve(frontendDistPath, "index.html"));
+    const indexHtmlPath = path.resolve(frontendDistPath, "index.html");
+    res.sendFile(indexHtmlPath, (err) => {
+      if (err) {
+        console.error("Error sending index.html:", err);
+        res.status(500).send("Error serving application.");
+      }
+    });
   });
+
+  app.use(express.static(frontendDistPath));
 } else {
   app.get("/", (req, res) => {
     res.send("API is running in development mode...");
