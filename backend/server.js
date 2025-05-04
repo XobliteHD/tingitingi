@@ -50,15 +50,18 @@ app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        console.log(`CORS: Allowed origin: ${origin || "N/A"}`);
         callback(null, true);
       } else {
-        console.error(`CORS Error: Origin ${origin} not allowed.`);
         callback(new Error("Not allowed by CORS"));
       }
     },
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
+
+app.options("*", cors());
 
 app.use(express.json());
 
