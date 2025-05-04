@@ -60,18 +60,15 @@ router.post("/", async (req, res) => {
     try {
       checkInDateForDB = new Date(checkIn);
       checkOutDateForDB = new Date(checkOut);
-
       if (
         isNaN(checkInDateForDB.getTime()) ||
         isNaN(checkOutDateForDB.getTime())
       ) {
         throw new Error("Invalid date format received.");
       }
-
       if (checkOutDateForDB <= checkInDateForDB) {
         throw new Error("Check-out date must be after check-in date.");
       }
-
       console.log(
         "Saving Check-in Date for DB:",
         checkInDateForDB.toISOString()
@@ -97,11 +94,13 @@ router.post("/", async (req, res) => {
         },
       ],
     });
-
     if (existingBooking) {
-      return res.status(409).json({
-        message: "Sorry, the selected dates conflict with a confirmed booking.",
-      });
+      return res
+        .status(409)
+        .json({
+          message:
+            "Sorry, the selected dates conflict with a confirmed booking.",
+        });
     }
 
     const newBooking = new Booking({
@@ -116,7 +115,6 @@ router.post("/", async (req, res) => {
       message: message || "",
       status: "Pending",
     });
-
     const savedBooking = await newBooking.save();
     console.log("Booking saved successfully:", savedBooking._id);
 
@@ -131,7 +129,6 @@ router.post("/", async (req, res) => {
         timeZone,
         locale: fr,
       });
-      const bookingRef = savedBooking._id.toString().slice(-6);
       const childrenText =
         savedBooking.children > 0 ? `, ${savedBooking.children} Enfant(s)` : "";
       const messageText =
@@ -148,9 +145,9 @@ router.post("/", async (req, res) => {
         `Admin notification email sent for booking ${savedBooking._id}`
       );
 
-      const userSubject = `Votre demande de réservation Tingitingi reçue ! (#${bookingRef})`;
+      const userSubject = `Votre demande de réservation Tingitingi reçue !`;
       const userHtml = `<h1>Merci pour votre demande de réservation, ${name} !</h1><p>Nous avons bien reçu votre demande pour <strong>${houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${savedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Votre demande est actuellement <strong>En attente</strong>. Nous l'examinerons sous peu et vous contacterons pour confirmation ou plus de détails.</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-      const userText = `Merci pour votre demande de réservation, ${name} !\nNous avons bien reçu votre demande pour ${houseId}.\nDétails :\nArrivée : ${formattedCheckIn}\nDépart : ${formattedCheckOut}\nInvités : ${savedBooking.adults} Adulte(s)${childrenText}\nVotre demande est actuellement En attente...\nRéf : ${bookingRef}\nCordialement, L'équipe Tingitingi`;
+      const userText = `Merci pour votre demande de réservation, ${name} !\nNous avons bien reçu votre demande pour ${houseId}.\nDétails :\nArrivée : ${formattedCheckIn}\nDépart : ${formattedCheckOut}\nInvités : ${savedBooking.adults} Adulte(s)${childrenText}\nVotre demande est actuellement En attente...\nCordialement, L'équipe Tingitingi`;
       await sendEmail({
         to: email,
         subject: userSubject,

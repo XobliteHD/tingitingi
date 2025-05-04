@@ -138,7 +138,6 @@ router.put("/:id/status", async (req, res) => {
           timeZone,
           locale: fr,
         });
-        const bookingRef = updatedBooking._id.toString().slice(-6);
         const childrenText =
           updatedBooking.children > 0
             ? `, ${updatedBooking.children} Enfant(s)`
@@ -148,13 +147,13 @@ router.put("/:id/status", async (req, res) => {
         let userText = "";
 
         if (newStatus === "Confirmed") {
-          userSubject = `Votre réservation Tingitingi est Confirmée ! (#${bookingRef})`;
-          userHtml = `<h1>Réservation Confirmée !</h1><p>Bonjour ${updatedBooking.name},</p><p>Nous avons le plaisir de confirmer votre réservation pour <strong>${updatedBooking.houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${updatedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><p>Au plaisir de vous accueillir !</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-          userText = `Réservation Confirmée !\nBonjour ${updatedBooking.name},\nNous avons le plaisir de confirmer votre réservation pour ${updatedBooking.houseId}.\nDétails : Arrivée : ${formattedCheckIn} | Départ : ${formattedCheckOut} | Invités : ${updatedBooking.adults} Adulte(s)${childrenText}\nRef : ${bookingRef}\nAu plaisir de vous accueillir !\nCordialement, L'équipe Tingitingi`;
+          userSubject = `Votre réservation Tingitingi est Confirmée !`;
+          userHtml = `<h1>Réservation Confirmée !</h1><p>Bonjour ${updatedBooking.name},</p><p>Nous avons le plaisir de confirmer votre réservation pour <strong>${updatedBooking.houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${updatedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Au plaisir de vous accueillir !</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
+          userText = `Réservation Confirmée !\nBonjour ${updatedBooking.name},\nNous avons le plaisir de confirmer votre réservation pour ${updatedBooking.houseId}.\nDétails : Arrivée : ${formattedCheckIn} | Départ : ${formattedCheckOut} | Invités : ${updatedBooking.adults} Adulte(s)${childrenText}\nAu plaisir de vous accueillir !\nCordialement, L'équipe Tingitingi`;
         } else {
-          userSubject = `Votre réservation Tingitingi a été Annulée (#${bookingRef})`;
-          userHtml = `<h1>Avis d'Annulation de Réservation</h1><p>Bonjour ${updatedBooking.name},</p><p>Ce courriel vous informe que votre demande de réservation pour <strong>${updatedBooking.houseId}</strong> du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.</p><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><p>Si vous avez des questions, veuillez nous contacter.</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-          userText = `Avis d'Annulation de Réservation\nBonjour ${updatedBooking.name},\nCe courriel vous informe que votre demande de réservation pour ${updatedBooking.houseId} du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.\nRef : ${bookingRef}\nSi vous avez des questions, veuillez nous contacter.\nCordialement, L'équipe Tingitingi`;
+          userSubject = `Votre réservation Tingitingi a été Annulée`;
+          userHtml = `<h1>Avis d'Annulation de Réservation</h1><p>Bonjour ${updatedBooking.name},</p><p>Ce courriel vous informe que votre demande de réservation pour <strong>${updatedBooking.houseId}</strong> du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.</p><p>Si vous avez des questions, veuillez nous contacter.</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
+          userText = `Avis d'Annulation de Réservation\nBonjour ${updatedBooking.name},\nCe courriel vous informe que votre demande de réservation pour ${updatedBooking.houseId} du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.\nSi vous avez des questions, veuillez nous contacter.\nCordialement, L'équipe Tingitingi`;
         }
         await sendEmail({
           to: updatedBooking.email,
@@ -340,7 +339,6 @@ router.put("/:id", async (req, res) => {
           timeZone,
           locale: fr,
         });
-        const bookingRef = updatedBooking._id.toString().slice(-6);
         const childrenText =
           updatedBooking.children > 0
             ? `, ${updatedBooking.children} Enfant(s)`
@@ -350,13 +348,13 @@ router.put("/:id", async (req, res) => {
         let userText = "";
 
         if (finalStatus === "Confirmed") {
-          userSubject = `Votre réservation Tingitingi est Confirmée ! (#${bookingRef})`;
-          userHtml = `<h1>Réservation Confirmée !</h1><p>Bonjour ${updatedBooking.name},</p><p>Nous avons le plaisir de confirmer votre réservation pour <strong>${updatedBooking.houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${updatedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><p>Au plaisir de vous accueillir !</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-          userText = `Réservation Confirmée !\nBonjour ${updatedBooking.name},\nNous avons le plaisir de confirmer votre réservation pour ${updatedBooking.houseId}.\nDétails : Arrivée : ${formattedCheckIn} | Départ : ${formattedCheckOut} | Invités : ${updatedBooking.adults} Adulte(s)${childrenText}\nRef : ${bookingRef}\nAu plaisir de vous accueillir !\nCordialement, L'équipe Tingitingi`;
+          userSubject = `Votre réservation Tingitingi est Confirmée !`;
+          userHtml = `<h1>Réservation Confirmée !</h1><p>Bonjour ${updatedBooking.name},</p><p>Nous avons le plaisir de confirmer votre réservation pour <strong>${updatedBooking.houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${updatedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Au plaisir de vous accueillir !</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
+          userText = `Réservation Confirmée !\nBonjour ${updatedBooking.name},\nNous avons le plaisir de confirmer votre réservation pour ${updatedBooking.houseId}.\nDétails : Arrivée : ${formattedCheckIn} | Départ : ${formattedCheckOut} | Invités : ${updatedBooking.adults} Adulte(s)${childrenText}\nAu plaisir de vous accueillir !\nCordialement, L'équipe Tingitingi`;
         } else {
-          userSubject = `Votre réservation Tingitingi a été Annulée (#${bookingRef})`;
-          userHtml = `<h1>Avis d'Annulation de Réservation</h1><p>Bonjour ${updatedBooking.name},</p><p>Ce courriel vous informe que votre demande de réservation pour <strong>${updatedBooking.houseId}</strong> du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.</p><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><p>Si vous avez des questions, veuillez nous contacter.</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-          userText = `Avis d'Annulation de Réservation\nBonjour ${updatedBooking.name},\nCe courriel vous informe que votre demande de réservation pour ${updatedBooking.houseId} du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.\nRef : ${bookingRef}\nSi vous avez des questions, veuillez nous contacter.\nCordialement, L'équipe Tingitingi`;
+          userSubject = `Votre réservation Tingitingi a été Annulée`;
+          userHtml = `<h1>Avis d'Annulation de Réservation</h1><p>Bonjour ${updatedBooking.name},</p><p>Ce courriel vous informe que votre demande de réservation pour <strong>${updatedBooking.houseId}</strong> du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.</p><p>Si vous avez des questions, veuillez nous contacter.</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
+          userText = `Avis d'Annulation de Réservation\nBonjour ${updatedBooking.name},\nCe courriel vous informe que votre demande de réservation pour ${updatedBooking.houseId} du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.\nSi vous avez des questions, veuillez nous contacter.\nCordialement, L'équipe Tingitingi`;
         }
         await sendEmail({
           to: updatedBooking.email,
