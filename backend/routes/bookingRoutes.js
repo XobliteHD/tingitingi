@@ -1,4 +1,3 @@
-// backend/routes/bookingRoutes.js
 import express from "express";
 import axios from "axios";
 import Booking from "../models/Booking.js";
@@ -29,10 +28,7 @@ router.post("/", async (req, res) => {
   try {
     const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
     if (!recaptchaSecretKey) {
-      console.error("RECAPTCHA_SECRET_KEY is not set.");
-      return res
-        .status(500)
-        .json({ message: "Server configuration error (reCAPTCHA)." });
+      throw new Error("Server configuration error (reCAPTCHA).");
     }
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`;
     const recaptchaResponse = await axios.post(verifyUrl);
@@ -45,6 +41,7 @@ router.post("/", async (req, res) => {
         .status(400)
         .json({ message: "reCAPTCHA verification failed." });
     }
+
     if (
       !houseId ||
       !name ||
@@ -64,23 +61,23 @@ router.post("/", async (req, res) => {
       checkInDateForDB = new Date(checkIn);
       checkOutDateForDB = new Date(checkOut);
 
-      if (isNaN(parsedCheckIn) || isNaN(parsedCheckOut)) {
+      if (
+        isNaN(checkInDateForDB.getTime()) ||
+        isNaN(checkOutDateForDB.getTime())
+      ) {
         throw new Error("Invalid date format received.");
       }
-
-      checkInDateForDB = startOfDay(parsedCheckIn);
-      checkOutDateForDB = startOfDay(parsedCheckOut);
 
       if (checkOutDateForDB <= checkInDateForDB) {
         throw new Error("Check-out date must be after check-in date.");
       }
 
       console.log(
-        "Normalized Check-in UTC Midnight for DB:",
+        "Saving Check-in Date for DB:",
         checkInDateForDB.toISOString()
       );
       console.log(
-        "Normalized Check-out UTC Midnight for DB:",
+        "Saving Check-out Date for DB:",
         checkOutDateForDB.toISOString()
       );
     } catch (dateError) {
@@ -121,10 +118,7 @@ router.post("/", async (req, res) => {
     });
 
     const savedBooking = await newBooking.save();
-    console.log(
-      "Booking saved successfully with normalized dates:",
-      savedBooking._id
-    );
+    console.log("Booking saved successfully:", savedBooking._id);
 
     try {
       const dateFormat = "eeee dd MMMM yyyy";
@@ -175,18 +169,7 @@ router.post("/", async (req, res) => {
 
     res.status(201).json({
       message: "Booking request received successfully!",
-      booking: {
-        id: savedBooking._id,
-        houseId: savedBooking.houseId,
-        name: savedBooking.name,
-        email: savedBooking.email,
-        checkIn: savedBooking.checkIn,
-        checkOut: savedBooking.checkOut,
-        adults: savedBooking.adults,
-        children: savedBooking.children,
-        status: savedBooking.status,
-        createdAt: savedBooking.createdAt,
-      },
+      booking: savedBooking,
     });
   } catch (error) {
     console.error("Error processing booking request:", error);
@@ -197,25 +180,13 @@ router.post("/", async (req, res) => {
         .json({ message: "Validation failed", errors: messages });
     }
     if (
-      error.message === "Invalid dates" ||
-      error.message === "Invalid check-in or check-out dates." ||
-      error.message === "Invalid date format received." ||
-      error.message === "Check-out date must be after check-in date."
+      error.message.includes("Invalid date format") ||
+      error.message.includes("Check-out date must be after")
     ) {
       return res.status(400).json({ message: error.message });
     }
-    if (error.response && error.message.includes("reCAPTCHA")) {
-      console.error("Axios Error Data (reCAPTCHA):", error.response.data);
-      console.error("Axios Error Status (reCAPTCHA):", error.response.status);
-      return res
-        .status(400)
-        .json({ message: "reCAPTCHA verification failed." });
-    } else if (error.response) {
-      console.error("Axios Error Data:", error.response.data);
-      console.error("Axios Error Status:", error.response.status);
-      return res
-        .status(500)
-        .json({ message: "Error during external verification." });
+    if (error.message.includes("Server configuration error (reCAPTCHA)")) {
+      return res.status(500).json({ message: error.message });
     }
     res.status(500).json({ message: "Server error creating booking." });
   }

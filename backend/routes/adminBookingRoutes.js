@@ -10,38 +10,27 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   console.log("Admin GET /bookings request with query:", req.query);
-
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 15;
     const skip = (page - 1) * limit;
-
     const filter = {};
     const validStatuses = ["Pending", "Confirmed", "Cancelled", "Completed"];
     if (req.query.status && validStatuses.includes(req.query.status)) {
       filter.status = req.query.status;
-      console.log("Applying status filter:", filter.status);
     }
-
     const searchQuery = {};
     const searchTerm = req.query.search ? req.query.search.trim() : "";
-
     if (searchTerm) {
       const searchRegex = new RegExp(searchTerm, "i");
-
       if (/^[a-f0-9]{1,24}$/i.test(searchTerm)) {
         console.log("Search term might be an ID suffix:", searchTerm);
       }
-
       searchQuery.$or = [{ name: searchRegex }, { email: searchRegex }];
-      console.log("Applying search filter:", searchQuery.$or);
     }
-
     const finalFilter = { ...filter, ...searchQuery };
-
     const sort = {};
     const sortBy = req.query.sortBy || "createdAt_desc";
-
     switch (sortBy) {
       case "checkIn_asc":
         sort.checkIn = 1;
@@ -57,26 +46,15 @@ router.get("/", async (req, res) => {
         sort.createdAt = -1;
         break;
     }
-    console.log("Applying sort:", sort);
-
     const totalBookings = await Booking.countDocuments(finalFilter);
-    console.log(
-      `Total bookings found matching filter [${JSON.stringify(
-        finalFilter
-      )}]: ${totalBookings}`
-    );
-
     let bookings = await Booking.find(finalFilter)
       .sort(sort)
       .limit(limit)
       .skip(skip);
-
     const totalPages = Math.ceil(totalBookings / limit);
-
     console.log(
       `Returning page ${page}/${totalPages}, ${bookings.length} bookings.`
     );
-
     res.status(200).json({
       bookings: bookings,
       page: page,
@@ -165,7 +143,6 @@ router.put("/:id/status", async (req, res) => {
           updatedBooking.children > 0
             ? `, ${updatedBooking.children} Enfant(s)`
             : "";
-
         let userSubject = "";
         let userHtml = "";
         let userText = "";
@@ -173,13 +150,12 @@ router.put("/:id/status", async (req, res) => {
         if (newStatus === "Confirmed") {
           userSubject = `Votre réservation Tingitingi est Confirmée ! (#${bookingRef})`;
           userHtml = `<h1>Réservation Confirmée !</h1><p>Bonjour ${updatedBooking.name},</p><p>Nous avons le plaisir de confirmer votre réservation pour <strong>${updatedBooking.houseId}</strong>.</p><p><strong>Détails :</strong></p><ul><li>Arrivée : ${formattedCheckIn}</li><li>Départ : ${formattedCheckOut}</li><li>Invités : ${updatedBooking.adults} Adulte(s)${childrenText}</li></ul><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><p>Au plaisir de vous accueillir !</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-          userText = `...`;
+          userText = `Réservation Confirmée !\nBonjour ${updatedBooking.name},\nNous avons le plaisir de confirmer votre réservation pour ${updatedBooking.houseId}.\nDétails : Arrivée : ${formattedCheckIn} | Départ : ${formattedCheckOut} | Invités : ${updatedBooking.adults} Adulte(s)${childrenText}\nRef : ${bookingRef}\nAu plaisir de vous accueillir !\nCordialement, L'équipe Tingitingi`;
         } else {
           userSubject = `Votre réservation Tingitingi a été Annulée (#${bookingRef})`;
           userHtml = `<h1>Avis d'Annulation de Réservation</h1><p>Bonjour ${updatedBooking.name},</p><p>Ce courriel vous informe que votre demande de réservation pour <strong>${updatedBooking.houseId}</strong> du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.</p><p>Votre référence de réservation (6 derniers chiffres) : ${bookingRef}</p><p>Si vous avez des questions, veuillez nous contacter.</p><br/><p>Cordialement,</p><p>L'équipe Tingitingi</p>`;
-          userText = `...`;
+          userText = `Avis d'Annulation de Réservation\nBonjour ${updatedBooking.name},\nCe courriel vous informe que votre demande de réservation pour ${updatedBooking.houseId} du ${formattedCheckIn} au ${formattedCheckOut} a été annulée.\nRef : ${bookingRef}\nSi vous avez des questions, veuillez nous contacter.\nCordialement, L'équipe Tingitingi`;
         }
-
         await sendEmail({
           to: updatedBooking.email,
           subject: userSubject,
@@ -196,7 +172,6 @@ router.put("/:id/status", async (req, res) => {
         );
       }
     }
-
     res.status(200).json({
       message: `Booking status updated to ${updatedBooking.status}`,
       booking: updatedBooking,
@@ -206,6 +181,7 @@ router.put("/:id/status", async (req, res) => {
     res.status(500).json({ message: "Server error updating booking status" });
   }
 });
+
 router.delete("/:id", async (req, res) => {
   const bookingId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(bookingId)) {
@@ -251,29 +227,28 @@ router.put("/:id", async (req, res) => {
   try {
     if (checkIn) {
       const parsedCheckIn = parseISO(checkIn);
-      if (isNaN(parsedCheckIn)) throw new Error("Invalid check-in date format");
+      if (isNaN(parsedCheckIn.getTime()))
+        throw new Error("Invalid check-in date format");
       checkInDateUTC = parsedCheckIn;
     }
     if (checkOut) {
       const parsedCheckOut = parseISO(checkOut);
-      if (isNaN(parsedCheckOut))
+      if (isNaN(parsedCheckOut.getTime()))
         throw new Error("Invalid check-out date format");
       checkOutDateUTC = parsedCheckOut;
     }
 
-    if (
-      checkInDateUTC &&
-      checkOutDateUTC &&
-      checkOutDateUTC <= checkInDateUTC
-    ) {
-      throw new Error("Check-out must be after check-in");
+    const bookingToCheck = await Booking.findById(bookingId).select(
+      "checkIn checkOut -_id"
+    );
+    if (!bookingToCheck) {
+      return res
+        .status(404)
+        .json({ message: "Booking not found for date validation." });
     }
-    const finalCheckIn =
-      checkInDateUTC ||
-      (await Booking.findById(bookingId).select("checkIn -_id")).checkIn;
-    const finalCheckOut =
-      checkOutDateUTC ||
-      (await Booking.findById(bookingId).select("checkOut -_id")).checkOut;
+    const finalCheckIn = checkInDateUTC || bookingToCheck.checkIn;
+    const finalCheckOut = checkOutDateUTC || bookingToCheck.checkOut;
+
     if (finalCheckIn && finalCheckOut && finalCheckOut <= finalCheckIn) {
       throw new Error(
         "Check-out must be after check-in (considering existing dates)"
@@ -283,27 +258,29 @@ router.put("/:id", async (req, res) => {
     return res.status(400).json({ message: dateError.message });
   }
 
-  const finalAdults = adults !== undefined ? parseInt(adults, 10) : undefined;
-  const finalChildren =
-    children !== undefined ? parseInt(children, 10) : undefined;
-  if (finalAdults !== undefined && (isNaN(finalAdults) || finalAdults < 1)) {
-    return res.status(400).json({ message: "Invalid number of adults." });
-  }
-  if (
-    finalChildren !== undefined &&
-    (isNaN(finalChildren) || finalChildren < 0)
-  ) {
-    return res.status(400).json({ message: "Invalid number of children." });
-  }
-
   const updateFields = {};
   if (name !== undefined) updateFields.name = name.trim();
   if (email !== undefined) updateFields.email = email.trim().toLowerCase();
   if (phone !== undefined) updateFields.phone = phone.trim();
   if (checkInDateUTC) updateFields.checkIn = checkInDateUTC;
   if (checkOutDateUTC) updateFields.checkOut = checkOutDateUTC;
-  if (finalAdults !== undefined) updateFields.adults = finalAdults;
-  if (finalChildren !== undefined) updateFields.children = finalChildren;
+
+  if (adults !== undefined) {
+    const finalAdults = parseInt(adults, 10);
+    if (!isNaN(finalAdults) && finalAdults >= 1) {
+      updateFields.adults = finalAdults;
+    } else {
+      return res.status(400).json({ message: "Invalid number of adults." });
+    }
+  }
+  if (children !== undefined) {
+    const finalChildren = parseInt(children, 10);
+    if (!isNaN(finalChildren) && finalChildren >= 0) {
+      updateFields.children = finalChildren;
+    } else {
+      return res.status(400).json({ message: "Invalid number of children." });
+    }
+  }
   if (newStatus) updateFields.status = newStatus;
   if (message !== undefined) updateFields.message = message.trim();
 
@@ -344,7 +321,7 @@ router.put("/:id", async (req, res) => {
       }
     }
 
-    bookingToUpdate.set(updateFields);
+    Object.assign(bookingToUpdate, updateFields);
     const updatedBooking = await bookingToUpdate.save();
 
     const finalStatus = updatedBooking.status;
@@ -357,16 +334,17 @@ router.put("/:id", async (req, res) => {
         const timeZone = "Africa/Tunis";
         const formattedCheckIn = format(updatedBooking.checkIn, dateFormat, {
           timeZone,
+          locale: fr,
         });
         const formattedCheckOut = format(updatedBooking.checkOut, dateFormat, {
           timeZone,
+          locale: fr,
         });
         const bookingRef = updatedBooking._id.toString().slice(-6);
         const childrenText =
           updatedBooking.children > 0
             ? `, ${updatedBooking.children} Enfant(s)`
             : "";
-
         let userSubject = "";
         let userHtml = "";
         let userText = "";
