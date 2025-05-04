@@ -79,9 +79,6 @@ const setUploadType = (type) => (req, res, next) => {
   next();
 };
 
-app.use("/api/houses", houseApiRoutes);
-app.use("/api/others", otherApiRoutes);
-app.use("/api/bookings", bookingRoutes);
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", protectAdmin);
 app.use("/api/admin/bookings", adminBookingRoutes);
