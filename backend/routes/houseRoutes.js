@@ -21,7 +21,7 @@ router.get("/:id/booked-dates", async (req, res) => {
 
     const bookedIntervals = bookings.map((booking) => ({
       start: booking.checkIn,
-      end: new Date(booking.checkOut.getTime() - 24 * 60 * 60 * 1000),
+      end: booking.checkOut,
       status: booking.status,
       bookingId: booking._id,
     }));

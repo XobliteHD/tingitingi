@@ -113,7 +113,7 @@ export default function HouseDetailsPage({ t, language }) {
           const data = await fetchPublicHouseBookedDates(houseId);
           const formattedData = data.map(interval => ({
               start: new Date(interval.start),
-              end: new Date(interval.end),
+              end: new Date(interval.end), // Expecting backend to send actual check-out date now
               status: interval.status
           }));
           setBookedDatesInfo(formattedData);
@@ -127,15 +127,22 @@ export default function HouseDetailsPage({ t, language }) {
       loadBookedDates();
   }, [loadBookedDates]);
 
-  const confirmedIntervals = bookedDatesInfo.filter(i => i.status === 'Confirmed').map(({ start, end }) => ({ start, end }));
   const allBookedDates = bookedDatesInfo;
+
   const getDayClassName = (date) => {
+      const dayOnly = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
       for (const interval of allBookedDates) {
-          const dO = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-          const sO = new Date(Date.UTC(interval.start.getFullYear(), interval.start.getMonth(), interval.start.getDate()));
-          const eO = new Date(Date.UTC(interval.end.getFullYear(), interval.end.getMonth(), interval.end.getDate()));
-          if (dO >= sO && dO <= eO) { return interval.status === 'Confirmed' ? styles.confirmedDay : styles.pendingDay; }
+          const startOnly = new Date(Date.UTC(interval.start.getFullYear(), interval.start.getMonth(), interval.start.getDate()));
+          const endOnly = new Date(Date.UTC(interval.end.getFullYear(), interval.end.getMonth(), interval.end.getDate()));
+          if (dayOnly >= startOnly && dayOnly < endOnly) { // Use < endOnly for styling
+              return interval.status === 'Confirmed' ? styles.confirmedDay : styles.pendingDay;
+          }
       } return '';
+  };
+
+  const isDateSelectable = (date) => {
+    const dayClassName = getDayClassName(date);
+    return !dayClassName.includes(styles.confirmedDay); // Only disable confirmed days
   };
 
   const handleNameChange = (e) => setName(e.target.value);
@@ -240,7 +247,12 @@ export default function HouseDetailsPage({ t, language }) {
             <div className="field">
               <label className="label" htmlFor={`checkin-date-${houseId}`}>{t('formCheckIn')}</label>
               <div className={`control has-icons-left ${formErrors.startDate ? styles.datepickerErrorWrapper : ''}`}>
-                 <DatePicker selected={startDate} onChange={handleStartDateChange} selectsStart startDate={startDate} endDate={endDate} minDate={new Date()} dateFormat="dd/MM/yyyy" excludeDateIntervals={confirmedIntervals} dayClassName={getDayClassName} customInput={<CustomDateInput id={`checkin-date-${houseId}`} placeholder={t('formSelectDate')} className={`input ${formErrors.startDate ? 'is-danger' : ''}`} />} />
+                 <DatePicker
+                    selected={startDate} onChange={handleStartDateChange} selectsStart startDate={startDate} endDate={endDate} minDate={new Date()} dateFormat="dd/MM/yyyy"
+                    filterDate={isDateSelectable}
+                    dayClassName={getDayClassName}
+                    customInput={<CustomDateInput id={`checkin-date-${houseId}`} placeholder={t('formSelectDate')} className={`input ${formErrors.startDate ? 'is-danger' : ''}`} />}
+                 />
                  <span className="icon is-left"><FaCalendarAlt /></span>
               </div>
               {formErrors.startDate && <p className="help is-danger">{formErrors.startDate}</p>}
@@ -248,7 +260,12 @@ export default function HouseDetailsPage({ t, language }) {
             <div className="field">
               <label className="label" htmlFor={`checkout-date-${houseId}`}>{t('formCheckOut')}</label>
               <div className={`control has-icons-left ${formErrors.endDate ? styles.datepickerErrorWrapper : ''}`}>
-                 <DatePicker selected={endDate} onChange={handleEndDateChange} selectsEnd startDate={startDate} endDate={endDate} minDate={startDate ? addDays(startDate, 1) : new Date()} dateFormat="dd/MM/yyyy" disabled={!startDate} excludeDateIntervals={confirmedIntervals} dayClassName={getDayClassName} customInput={<CustomDateInput id={`checkout-date-${houseId}`} placeholder={t('formSelectDate')} className={`input ${formErrors.endDate ? 'is-danger' : ''}`} />} />
+                 <DatePicker
+                    selected={endDate} onChange={handleEndDateChange} selectsEnd startDate={startDate} endDate={endDate} minDate={startDate ? addDays(startDate, 1) : new Date()} dateFormat="dd/MM/yyyy" disabled={!startDate}
+                    filterDate={isDateSelectable}
+                    dayClassName={getDayClassName}
+                    customInput={<CustomDateInput id={`checkout-date-${houseId}`} placeholder={t('formSelectDate')} className={`input ${formErrors.endDate ? 'is-danger' : ''}`} />}
+                 />
                  <span className="icon is-left"><FaCalendarAlt /></span>
               </div>
               {formErrors.endDate && <p className="help is-danger">{formErrors.endDate}</p>}
