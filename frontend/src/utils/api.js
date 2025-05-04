@@ -182,3 +182,7 @@ export const fetchPublicOtherDetails = (otherId) => {
 export const fetchAdminHouses = () => {
   return apiCall("/admin/houses", "GET", null, false, true);
 };
+
+export const loginAdmin = (credentials) => {
+  return apiCall("/admin/auth/login", "POST", credentials, false, false);
+};

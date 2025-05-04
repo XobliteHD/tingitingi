@@ -4,7 +4,7 @@ import React, { useState, } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AdminCommon.css';
 import toast from 'react-hot-toast';
-import { apiCall } from '../utils/api';
+import { loginAdmin } from '../utils/api';
 
 export default function AdminLoginPage({ t = (key) => key }) {
     const [email, setEmail] = useState('');
@@ -20,7 +20,7 @@ export default function AdminLoginPage({ t = (key) => key }) {
         setError(null);
         try {
             const loginData = { email, password };
-            const data = await apiCall('/admin/auth/login', 'POST', loginData, false, false);
+            const data = await loginAdmin(loginData);
             localStorage.setItem('adminUserInfo', JSON.stringify(data));
             navigate('/admin/dashboard');
         } catch (err) {
