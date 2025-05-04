@@ -260,6 +260,7 @@ router.put("/:id", async (req, res) => {
         throw new Error("Invalid check-out date format");
       checkOutDateUTC = parsedCheckOut;
     }
+
     if (
       checkInDateUTC &&
       checkOutDateUTC &&
@@ -267,15 +268,16 @@ router.put("/:id", async (req, res) => {
     ) {
       throw new Error("Check-out must be after check-in");
     }
-    {
-      throw new Error("Invalid date format");
-    }
-    if (
-      checkInDateUTC &&
-      checkOutDateUTC &&
-      checkOutDateUTC <= checkInDateUTC
-    ) {
-      throw new Error("Check-out must be after check-in");
+    const finalCheckIn =
+      checkInDateUTC ||
+      (await Booking.findById(bookingId).select("checkIn -_id")).checkIn;
+    const finalCheckOut =
+      checkOutDateUTC ||
+      (await Booking.findById(bookingId).select("checkOut -_id")).checkOut;
+    if (finalCheckIn && finalCheckOut && finalCheckOut <= finalCheckIn) {
+      throw new Error(
+        "Check-out must be after check-in (considering existing dates)"
+      );
     }
   } catch (dateError) {
     return res.status(400).json({ message: dateError.message });
