@@ -1,14 +1,8 @@
 import express from "express";
 import axios from "axios";
 import Booking from "../models/Booking.js";
-import {
-  format,
-  zonedTimeToUtc,
-  utcToZonedTime,
-  startOfDay as zonedStartOfDay,
-} from "date-fns-tz";
+import { format, zonedTimeToUtc } from "date-fns-tz";
 import sendEmail from "../config/mailConfig.js";
-import { format } from "date-fns-tz";
 
 const router = express.Router();
 
