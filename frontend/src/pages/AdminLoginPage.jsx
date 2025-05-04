@@ -3,6 +3,8 @@
 import React, { useState, } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AdminCommon.css';
+import toast from 'react-hot-toast';
+import { apiCall } from '../utils/api';
 
 export default function AdminLoginPage({ t = (key) => key }) {
     const [email, setEmail] = useState('');
@@ -17,30 +19,21 @@ export default function AdminLoginPage({ t = (key) => key }) {
         setIsLoading(true);
         setError(null);
         try {
-          const response = await fetch('http://192.168.1.38:5000/api/admin/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password }),
-          }); const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.message || `HTTP error! status: ${response.status}`);
-          }
-          console.log('Login successful:', data);
-    
-          localStorage.setItem('adminUserInfo', JSON.stringify(data));
-    
-          navigate('/admin/dashboard');
-    
+            const loginData = { email, password };
+            const data = await apiCall('/admin/auth/login', 'POST', loginData, false, false);
+            localStorage.setItem('adminUserInfo', JSON.stringify(data));
+            navigate('/admin/dashboard');
         } catch (err) {
-          console.error("Login failed:", err);
-          setError(err.message || t('adminLoginInvalidCredentials') || 'An error occurred');
+            console.error("Login failed:", err);
+             const errorMessage = err.message === "Unauthorized"
+                 ? (t('adminLoginInvalidCredentials') || 'Invalid email or password')
+                 : (err.message || t('adminLoginFailedError', { default: 'Login failed. Please try again.' }));
+             setError(errorMessage);
+             toast.error(errorMessage);
         } finally {
-          setIsLoading(false);
+            setIsLoading(false);
         }
-        };
+    };
 
     return (
         <section className="hero is-fullheight">
