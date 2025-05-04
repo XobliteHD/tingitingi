@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { format, addDays } from 'date-fns';
+import { format as formatTz } from 'date-fns-tz';
+import { addDays } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import DatePicker from "react-datepicker";
 import { Link, useNavigate } from 'react-router-dom';
@@ -100,18 +101,24 @@ export default function AdminBookingsPage({ t }) {
     if (!dateString) return t('adminBookingsNotAvailable') || 'N/A';
     try {
         const date = new Date(dateString);
+        if (isNaN(date)) throw new Error("Invalid date value");
+
+        const timeZone = 'Africa/Tunis';
         let formatString = 'PP';
 
         if (formatKey === 'dateTime') {
-             formatString = 'MMM d HH:mm';
+             formatString = 'PPp';
+        } else if (formatKey === 'isoDateOnly') {
+             formatString = 'yyyy-MM-dd';
         }
 
-        return format(date, formatString, { locale: currentLocale });
+        return formatTz(date, formatString, { locale: currentLocale, timeZone });
+
     } catch (error) {
         console.error("Error formatting date:", dateString, error);
         return t('adminBookingsInvalidDate') || 'Invalid Date';
     }
-};
+  };
 
   const handleUpdateStatus = (bookingId, newStatus) => {
     setError(null);
@@ -217,14 +224,32 @@ export default function AdminBookingsPage({ t }) {
   const handleModalAdultsChange = (event) => { setModalData(prev => ({ ...prev, adults: Math.max(1, parseInt(event.target.value, 10) || 1) })); };
   const handleModalChildrenChange = (event) => { setModalData(prev => ({ ...prev, children: Math.max(0, parseInt(event.target.value, 10) || 0) })); };
   const getModalDayClassName = (date) => {
+    const dayOnly = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     for (const interval of modalBookedDatesInfo) {
-        const dayOnly = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-        const startOnly = new Date(Date.UTC(interval.start.getFullYear(), interval.start.getMonth(), interval.start.getDate()));
-        const endOnly = new Date(Date.UTC(interval.end.getFullYear(), interval.end.getMonth(), interval.end.getDate()));
-        if (dayOnly >= startOnly && dayOnly <= endOnly) { return interval.status === 'Confirmed' ? "confirmedDay" : "pendingDay"; }
-    } return '';
-  };
-  const modalConfirmedIntervals = modalBookedDatesInfo.filter(interval => interval.status === 'Confirmed').map(({ start, end }) => ({ start, end }));
+      const intervalStart = new Date(interval.start);
+      const intervalEnd = new Date(interval.end);
+      const startOnly = Date.UTC(intervalStart.getFullYear(), intervalStart.getMonth(), intervalStart.getDate());
+      const endDayExclusive = Date.UTC(intervalEnd.getFullYear(), intervalEnd.getMonth(), intervalEnd.getDate());
+      if (dayOnly >= startOnly && dayOnly < endDayExclusive) {
+           return interval.status === 'Confirmed' ? "confirmedDay" : "pendingDay";
+      }
+  }
+  return '';
+ };
+ const modalConfirmedIntervals = modalBookedDatesInfo
+ .filter(interval => interval.status === 'Confirmed')
+ .map(({ start, end }) => {
+     const checkInDayStart = new Date(start);
+     checkInDayStart.setUTCHours(0,0,0,0);
+     const checkOutDayStart = new Date(end);
+     checkOutDayStart.setUTCHours(0,0,0,0);
+     const lastBlockedDay = addDays(checkOutDayStart, -1);
+     if (checkInDayStart > lastBlockedDay) {
+         console.warn("Skipping invalid interval for exclusion:", {start, end});
+         return null;
+     }
+     return { start: checkInDayStart, end: lastBlockedDay };
+ }).filter(interval => interval !== null);
 
   const handleModalSave = async () => {
       if (!editingBooking) return;

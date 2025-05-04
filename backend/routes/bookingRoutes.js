@@ -5,6 +5,7 @@ import Booking from "../models/Booking.js";
 import { format } from "date-fns-tz";
 import { fr } from "date-fns/locale";
 import sendEmail from "../config/mailConfig.js";
+import { parseISO, startOfDay } from "date-fns";
 
 const router = express.Router();
 
@@ -61,37 +62,19 @@ router.post("/", async (req, res) => {
 
     let checkInDateForDB, checkOutDateForDB;
     try {
-      const initialCheckInDate = new Date(checkIn);
-      const initialCheckOutDate = new Date(checkOut);
+      checkInDateForDB = new Date(checkIn);
+      checkOutDateForDB = new Date(checkOut);
 
-      if (isNaN(initialCheckInDate) || isNaN(initialCheckOutDate)) {
+      if (isNaN(checkInDateForDB) || isNaN(checkOutDateForDB)) {
         throw new Error("Invalid date format received.");
       }
-
-      checkInDateForDB = new Date(
-        Date.UTC(
-          initialCheckInDate.getFullYear(),
-          initialCheckInDate.getMonth(),
-          initialCheckInDate.getDate()
-        )
-      );
-      checkOutDateForDB = new Date(
-        Date.UTC(
-          initialCheckOutDate.getFullYear(),
-          initialCheckOutDate.getMonth(),
-          initialCheckOutDate.getDate()
-        )
-      );
 
       if (checkOutDateForDB <= checkInDateForDB) {
         throw new Error("Check-out date must be after check-in date.");
       }
 
-      console.log("Final Check-in UTC for DB:", checkInDateForDB.toISOString());
-      console.log(
-        "Final Check-out UTC for DB:",
-        checkOutDateForDB.toISOString()
-      );
+      console.log("Check-in Date for DB:", checkInDateForDB.toISOString());
+      console.log("Check-out Date for DB:", checkOutDateForDB.toISOString());
     } catch (dateError) {
       console.error("Date parsing/validation error:", dateError);
       return res.status(400).json({
