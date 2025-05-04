@@ -1,7 +1,7 @@
 import express from "express";
 import axios from "axios";
 import Booking from "../models/Booking.js";
-import { format, zonedTimeToUTC } from "date-fns-tz";
+import { format, toDate } from "date-fns-tz";
 import sendEmail from "../config/mailConfig.js";
 
 const router = express.Router();
@@ -64,8 +64,8 @@ router.post("/", async (req, res) => {
     let checkInDateUTC, checkOutDateUTC;
     const timeZone = "Africa/Tunis";
     try {
-      checkInDateUTC = zonedTimeToUTC(checkIn, timeZone);
-      checkOutDateUTC = zonedTimeToUTC(checkOut, timeZone);
+      checkInDateUTC = toDate(checkIn, { timeZone });
+      checkOutDateUTC = toDate(checkOut, { timeZone });
       if (
         isNaN(checkInDateUTC) ||
         isNaN(checkOutDateUTC) ||
