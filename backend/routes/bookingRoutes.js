@@ -1,7 +1,9 @@
+// backend/routes/bookingRoutes.js
 import express from "express";
 import axios from "axios";
 import Booking from "../models/Booking.js";
 import { format } from "date-fns-tz";
+import { fr } from "date-fns/locale";
 import sendEmail from "../config/mailConfig.js";
 
 const router = express.Router();
@@ -43,7 +45,6 @@ router.post("/", async (req, res) => {
         .status(400)
         .json({ message: "reCAPTCHA verification failed." });
     }
-
     if (
       !houseId ||
       !name ||
@@ -60,25 +61,25 @@ router.post("/", async (req, res) => {
 
     let checkInDateForDB, checkOutDateForDB;
     try {
-      checkInDateForDB = new Date(checkIn);
-      checkOutDateForDB = new Date(checkOut);
+      const initialCheckInDate = new Date(checkIn);
+      const initialCheckOutDate = new Date(checkOut);
 
-      if (isNaN(checkInDateForDB) || isNaN(checkOutDateForDB)) {
+      if (isNaN(initialCheckInDate) || isNaN(initialCheckOutDate)) {
         throw new Error("Invalid date format received.");
       }
 
       checkInDateForDB = new Date(
         Date.UTC(
-          parsedCheckIn.getFullYear(),
-          parsedCheckIn.getMonth(),
-          parsedCheckIn.getDate()
+          initialCheckInDate.getFullYear(),
+          initialCheckInDate.getMonth(),
+          initialCheckInDate.getDate()
         )
       );
       checkOutDateForDB = new Date(
         Date.UTC(
-          parsedCheckOut.getFullYear(),
-          parsedCheckOut.getMonth(),
-          parsedCheckOut.getDate()
+          initialCheckOutDate.getFullYear(),
+          initialCheckOutDate.getMonth(),
+          initialCheckOutDate.getDate()
         )
       );
 
@@ -209,7 +210,13 @@ router.post("/", async (req, res) => {
     ) {
       return res.status(400).json({ message: error.message });
     }
-    if (error.response) {
+    if (error.response && error.message.includes("reCAPTCHA")) {
+      console.error("Axios Error Data (reCAPTCHA):", error.response.data);
+      console.error("Axios Error Status (reCAPTCHA):", error.response.status);
+      return res
+        .status(400)
+        .json({ message: "reCAPTCHA verification failed." });
+    } else if (error.response) {
       console.error("Axios Error Data:", error.response.data);
       console.error("Axios Error Status:", error.response.status);
       return res
