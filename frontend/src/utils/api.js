@@ -16,7 +16,7 @@ const getAuthToken = () => {
 };
 
 const getApiBaseUrl = () => {
-  return import.meta.env.VITE_API_URL || "http://192.168.1.38:5000/api";
+  return import.meta.env.VITE_API_URL || "/api";
 };
 
 const apiCall = async (
