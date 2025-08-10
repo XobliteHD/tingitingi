@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const otherSchema = new mongoose.Schema(
+const spaceSchema = new mongoose.Schema(
   {
     _id: {
       type: String,
@@ -59,6 +59,6 @@ const otherSchema = new mongoose.Schema(
   }
 );
 
-const Other = mongoose.model("Other", otherSchema);
+const Space = mongoose.model("Space", spaceSchema);
 
-export default Other;
+export default Space;

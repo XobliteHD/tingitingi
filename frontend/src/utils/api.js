@@ -134,20 +134,20 @@ export const fetchAdminHouseDetails = (houseId) => {
   return apiCall(`/admin/houses/${houseId}`, "GET", null, false, true);
 };
 
-export const fetchAdminOthers = () => {
-  return apiCall("/admin/others", "GET", null, false, true);
+export const fetchAdminSpaces = () => {
+  return apiCall("/admin/spaces", "GET", null, false, true);
 };
-export const fetchAdminOtherDetails = (otherId) => {
-  return apiCall(`/admin/others/${otherId}`, "GET", null, false, true);
+export const fetchAdminSpaceDetails = (spaceId) => {
+  return apiCall(`/admin/spaces/${spaceId}`, "GET", null, false, true);
 };
-export const createAdminOther = (formData) => {
-  return apiCall("/admin/others", "POST", formData, true, true);
+export const createAdminSpace = (formData) => {
+  return apiCall("/admin/spaces", "POST", formData, true, true);
 };
-export const updateAdminOther = (otherId, formData) => {
-  return apiCall(`/admin/others/${otherId}`, "PUT", formData, true, true);
+export const updateAdminSpace = (spaceId, formData) => {
+  return apiCall(`/admin/spaces/${spaceId}`, "PUT", formData, true, true);
 };
-export const deleteAdminOther = (otherId) => {
-  return apiCall(`/admin/others/${otherId}`, "DELETE", null, false, true);
+export const deleteAdminSpace = (spaceId) => {
+  return apiCall(`/admin/spaces/${spaceId}`, "DELETE", null, false, true);
 };
 
 export const updateAdminBookingStatus = (bookingId, status) => {
@@ -169,15 +169,21 @@ export const updateAdminBookingDetails = (bookingId, updateData) => {
     true
   );
 };
+
+export const submitContactForm = (formData) => {
+  return apiCall("/contact", "POST", formData, false, false);
+};
+
+
 export const deleteAdminBooking = (bookingId) => {
   return apiCall(`/admin/bookings/${bookingId}`, "DELETE", null, false, true);
 };
 
-export const fetchPublicOthers = () => {
-  return apiCall("/others", "GET", null, false, false);
+export const fetchPublicSpaces = () => {
+  return apiCall("/spaces", "GET", null, false, false);
 };
-export const fetchPublicOtherDetails = (otherId) => {
-  return apiCall(`/others/${otherId}`, "GET", null, false, false);
+export const fetchPublicSpaceDetails = (spaceId) => {
+  return apiCall(`/spaces/${spaceId}`, "GET", null, false, false);
 };
 export const fetchAdminHouses = () => {
   return apiCall("/admin/houses", "GET", null, false, true);
@@ -185,4 +191,32 @@ export const fetchAdminHouses = () => {
 
 export const loginAdmin = (credentials) => {
   return apiCall("/admin/auth/login", "POST", credentials, false, false);
+};
+
+export const fetchAdminArticles = () => {
+  return apiCall("/admin/blog", "GET", null, false, true);
+};
+
+export const fetchAdminArticleDetails = (articleId) => {
+  return apiCall(`/admin/blog/${articleId}`, "GET", null, false, true);
+};
+
+export const createAdminArticle = (formData) => {
+  return apiCall("/admin/blog", "POST", formData, true, true);
+};
+
+export const updateAdminArticle = (articleId, formData) => {
+  return apiCall(`/admin/blog/${articleId}`, "PUT", formData, true, true);
+};
+
+export const deleteAdminArticle = (articleId) => {
+  return apiCall(`/admin/blog/${articleId}`, "DELETE", null, false, true);
+};
+
+export const fetchPublicArticles = () => {
+  return apiCall("/blog", "GET", null, false, false);
+};
+
+export const fetchPublicArticleDetails = (slug) => {
+  return apiCall(`/blog/${slug}`, "GET", null, false, false);
 };

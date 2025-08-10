@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { fetchPublicHouses, fetchPublicOthers } from '../utils/api';
+import { fetchPublicHouses, fetchPublicSpaces } from '../utils/api';
 
 export default function Home({ t, language }) {
   const [houses, setHouses] = useState([]);
-  const [othersData, setOthersData] = useState([]);
+  const [spacesData, setSpacesData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -13,12 +13,25 @@ export default function Home({ t, language }) {
       setIsLoading(true);
       setError(null);
       try {
-        const [fetchedHouses, fetchedOthers] = await Promise.all([
+        const [fetchedHouses, fetchedSpaces] = await Promise.all([
           fetchPublicHouses(),
-          fetchPublicOthers()
+          fetchPublicSpaces()
         ]);
-        setHouses(fetchedHouses || []);
-        setOthersData(fetchedOthers || []);
+
+        if (Array.isArray(fetchedHouses)) {
+          setHouses(fetchedHouses);
+        } else {
+          console.warn("fetchPublicHouses did not return an array. Received:", fetchedHouses);
+          setHouses([]);
+        }
+
+        if (Array.isArray(fetchedSpaces)) {
+          setSpacesData(fetchedSpaces);
+        } else {
+          console.warn("fetchPublicSpaces did not return an array. Received:", fetchedSpaces);
+          setSpacesData([]);
+        }
+
       } catch (fetchError) {
         console.error("Error fetching home page data:", fetchError);
         setError(fetchError.message || 'Failed to fetch data');
@@ -64,27 +77,27 @@ export default function Home({ t, language }) {
           <p className="grid-span-all">{t('noHousesAvailable')}</p>
         )}
 
-        {othersData.length > 0 && (
+        {spacesData.length > 0 && (
           <h2 className="section-title section-title--grid-header">
-            {t('other')}
+            {t('ourSpaces', { default: 'Our Spaces' })}
           </h2>
         )}
 
-        {othersData.length > 0 ? (
-          othersData.map((otherItem) => (
-            <div key={otherItem.id} className="card">
+        {spacesData.length > 0 ? (
+          spacesData.map((spaceItem) => (
+            <div key={spaceItem.id} className="card">
               <div className="card-media">
                 <img
-                  src={otherItem.image || '/images/placeholder.png'}
-                  alt={`Image of ${otherItem.name}`}
+                  src={spaceItem.image || '/images/placeholder.png'}
+                  alt={`Image of ${spaceItem.name}`}
                 />
               </div>
               <div className="card-content">
-                <h3 className="card-title">{otherItem.name}</h3>
+                <h3 className="card-title">{spaceItem.name}</h3>
                 <p className="card-description">
-                    {otherItem.shortDescription?.[language] || otherItem.shortDescription?.['en'] || ''}
+                    {spaceItem.shortDescription?.[language] || spaceItem.shortDescription?.['en'] || ''}
                 </p>
-                <Link to={`/Other/${otherItem.id}`} className="card-button">
+                <Link to={`/spaces/${spaceItem.id}`} className="card-button">
                   {t('viewDetails')}
                 </Link>
               </div>

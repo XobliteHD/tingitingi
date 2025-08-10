@@ -48,7 +48,7 @@ if (missingVars.length > 0) {
     }
   });
 }
-const sendEmail = async ({ to, subject, text, html }) => {
+const sendEmail = async ({ to, subject, text, html, replyTo }) => {
   if (!transporter) {
     console.warn(
       `Email sending skipped: Email transporter not configured due to missing .env variables.`
@@ -62,6 +62,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
     subject: subject,
     text: text,
     html: html,
+    replyTo: replyTo,
   };
 
   try {

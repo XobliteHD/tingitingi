@@ -6,12 +6,15 @@ import connectDB from "./config/db.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import houseApiRoutes from "./routes/houseRoutes.js";
-import otherApiRoutes from "./routes/otherRoutes.js";
+import spaceApiRoutes from "./routes/spaceRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import adminBookingRoutes from "./routes/adminBookingRoutes.js";
 import adminAuthRoutes from "./routes/adminAuthRoutes.js";
 import adminHouseRoutes from "./routes/adminHouseRoutes.js";
-import adminOtherRoutes from "./routes/adminOtherRoutes.js";
+import adminSpaceRoutes from "./routes/adminSpaceRoutes.js";
+import adminArticleRoutes from "./routes/adminArticleRoutes.js";
+import articleRoutes from "./routes/articleRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 
 import { protectAdmin } from "./middleware/authMiddleware.js";
 
@@ -33,6 +36,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://192.168.1.38:3000",
   "http://localhost:5000",
+  "http://26.159.109.192:3000",
 ];
 
 const productionFrontendUrl = process.env.FRONTEND_URL;
@@ -49,19 +53,26 @@ if (productionFrontendUrl) {
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      console.log("CORS check: Request Origin Header ->", origin);
+      console.log("CORS check: Allowed Origins ->", allowedOrigins);
+
+      if (!origin || allowedOrigins.includes(origin)) {
+        console.log("CORS check: Origin ALLOWED");
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        console.error(
+          `CORS check: Origin DENIED - ${origin} is not in allowedOrigins.`
+        );
+        callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
       }
     },
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
     preflightContinue: false,
     optionsSuccessStatus: 204,
   })
 );
 
-//app.options("*", cors());
 
 app.use(express.json());
 
@@ -71,9 +82,11 @@ console.log("DEBUG: Defining routes START");
 
 app.use("/api/houses", houseApiRoutes);
 
-app.use("/api/others", otherApiRoutes);
+app.use("/api/spaces", spaceApiRoutes);
 
 app.use("/api/bookings", bookingRoutes);
+
+app.use("/api/blog", articleRoutes);
 
 const setUploadType = (type) => (req, res, next) => {
   console.log(`Setting req.uploadType = ${type}`);
@@ -84,8 +97,10 @@ const setUploadType = (type) => (req, res, next) => {
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", protectAdmin);
 app.use("/api/admin/bookings", adminBookingRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api/admin/houses", setUploadType("house"), adminHouseRoutes);
-app.use("/api/admin/others", setUploadType("other"), adminOtherRoutes);
+app.use("/api/admin/spaces", setUploadType("space"), adminSpaceRoutes);
+app.use("/api/admin/blog", setUploadType("blog"), adminArticleRoutes);
 
 console.log("DEBUG: Defining routes END");
 

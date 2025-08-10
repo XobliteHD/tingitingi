@@ -5,7 +5,7 @@ import {
   storage as cloudinaryStorage,
   cloudinary,
 } from "../config/cloudinaryConfig.js";
-import Other from "../models/Other.js";
+import Space from "../models/Space.js";
 
 const router = express.Router();
 
@@ -16,26 +16,26 @@ const upload = multer({ storage: cloudinaryStorage });
 
 router.get("/", async (req, res) => {
   try {
-    const others = await Other.find({}).sort({ _id: 1 });
-    res.status(200).json(others);
+    const spaces = await Space.find({}).sort({ _id: 1 });
+    res.status(200).json(spaces);
   } catch (error) {
-    console.error("Admin: Error fetching others:", error);
-    res.status(500).json({ message: "Server error fetching others" });
+    console.error("Admin: Error fetching spaces:", error);
+    res.status(500).json({ message: "Server error fetching spaces" });
   }
 });
 
 router.get("/:id", async (req, res) => {
-  const otherId = req.params.id;
+  const spaceId = req.params.id;
   try {
-    const other = await Other.findById(otherId);
-    if (!other)
-      return res.status(404).json({ message: "Other item not found" });
-    res.status(200).json(other);
+    const space = await Space.findById(spaceId);
+    if (!space)
+      return res.status(404).json({ message: "Space item not found" });
+    res.status(200).json(space);
   } catch (error) {
-    console.error(`Admin: Error fetching other ${otherId}:`, error);
+    console.error(`Admin: Error fetching space ${spaceId}:`, error);
     res
       .status(500)
-      .json({ message: "Server error fetching other item details" });
+      .json({ message: "Server error fetching space item details" });
   }
 });
 
@@ -46,9 +46,6 @@ router.post(
     { name: "images", maxCount: 20 },
   ]),
   async (req, res) => {
-    console.log("Admin Create Other Request Body:", req.body);
-    console.log("Admin Create Other Request Files:", req.files);
-
     const {
       id,
       name,
@@ -67,9 +64,7 @@ router.post(
       longDescription_fr,
       longDescription_en,
     };
-    const unavailableValue =
-      req.body.isManuallyUnavailable === "true" ||
-      req.body.isManuallyUnavailable === true;
+    
     const missingFields = Object.entries(requiredFields)
       .filter(([key, value]) => !value || value.trim() === "")
       .map(([key]) => key);
@@ -93,8 +88,8 @@ router.post(
     }
 
     try {
-      const existingOther = await Other.findById(id);
-      if (existingOther) {
+      const existingSpace = await Space.findById(id);
+      if (existingSpace) {
         if (req.files?.image?.[0]?.filename)
           await cloudinary.uploader
             .destroy(req.files.image[0].filename)
@@ -110,14 +105,14 @@ router.post(
               )
         );
         return res.status(400).json({
-          message: `Other item with ID (slug) '${id}' already exists.`,
+          message: `Space item with ID (slug) '${id}' already exists.`,
         });
       }
 
       const mainImagePath = req.files?.image?.[0]?.path;
       const galleryImagePaths = req.files?.images?.map((f) => f.path) || [];
 
-      const newOtherData = {
+      const newSpaceData = {
         _id: id,
         name: name.trim(),
         shortDescription: {
@@ -130,15 +125,15 @@ router.post(
         },
         image: mainImagePath,
         images: galleryImagePaths,
+        isManuallyUnavailable: isManuallyUnavailable === 'true'
       };
 
-      const newOther = new Other(newOtherData);
-      const savedOther = await newOther.save();
+      const newSpace = new Space(newSpaceData);
+      const savedSpace = await newSpace.save();
 
-      console.log("Other item created successfully:", savedOther._id);
-      res.status(201).json(savedOther);
+      res.status(201).json(savedSpace);
     } catch (error) {
-      console.error("Admin: Error creating other item:", error);
+      console.error("Admin: Error creating space item:", error);
       if (req.files?.image?.[0]?.filename)
         await cloudinary.uploader
           .destroy(req.files.image[0].filename)
@@ -160,7 +155,7 @@ router.post(
           .status(400)
           .json({ message: "Validation failed", errors: messages });
       }
-      res.status(500).json({ message: "Server error creating other item" });
+      res.status(500).json({ message: "Server error creating space item" });
     }
   }
 );
@@ -172,7 +167,7 @@ router.put(
     { name: "images", maxCount: 20 },
   ]),
   async (req, res) => {
-    const otherId = req.params.id;
+    const spaceId = req.params.id;
     const {
       name,
       shortDescription_fr,
@@ -182,16 +177,10 @@ router.put(
       imagesToDelete,
       isManuallyUnavailable,
     } = req.body;
-    const unavailableValue =
-      req.body.isManuallyUnavailable === "true" ||
-      req.body.isManuallyUnavailable === true;
-    console.log(`Admin Updating other item ${otherId}`);
-    console.log("Update Body:", req.body);
-    console.log("Update Files:", req.files);
 
     try {
-      const otherToUpdate = await Other.findById(otherId);
-      if (!otherToUpdate) {
+      const spaceToUpdate = await Space.findById(spaceId);
+      if (!spaceToUpdate) {
         if (req.files?.image?.[0]?.filename)
           await cloudinary.uploader
             .destroy(req.files.image[0].filename)
@@ -206,7 +195,7 @@ router.put(
                 console.error("Cloudinary cleanup error (images):", e)
               )
         );
-        return res.status(404).json({ message: "Other item not found" });
+        return res.status(404).json({ message: "Space item not found" });
       }
 
       const updateFields = {};
@@ -234,12 +223,9 @@ router.put(
 
       if (req.files?.image?.[0]) {
         const newImageData = req.files.image[0];
-        if (otherToUpdate.image && otherToUpdate.image !== DEFAULT_IMAGE_URL) {
-          const oldPublicId = extractPublicId(otherToUpdate.image);
+        if (spaceToUpdate.image && spaceToUpdate.image !== DEFAULT_IMAGE_URL) {
+          const oldPublicId = extractPublicId(spaceToUpdate.image);
           if (oldPublicId) {
-            console.log(
-              `Deleting old main image (non-default): ${oldPublicId}`
-            );
             await cloudinary.uploader
               .destroy(oldPublicId)
               .catch((e) =>
@@ -250,23 +236,16 @@ router.put(
         updateFields.image = newImageData.path;
       }
 
-      let currentImages = [...otherToUpdate.images];
-
+      let currentImages = [...spaceToUpdate.images];
       let urlsToDelete = [];
+
       if (imagesToDelete) {
-        console.log("Raw imagesToDelete received for Other:", imagesToDelete);
         try {
           urlsToDelete = JSON.parse(imagesToDelete);
           if (!Array.isArray(urlsToDelete)) {
-            console.warn("Parsed imagesToDelete is not an array, ignoring.");
             urlsToDelete = [];
           }
-          console.log("Parsed urlsToDelete for Other:", urlsToDelete);
         } catch (parseError) {
-          console.error(
-            "Error parsing imagesToDelete JSON for Other:",
-            parseError
-          );
           urlsToDelete = [];
         }
       }
@@ -276,46 +255,22 @@ router.put(
           .map(extractPublicId)
           .filter((id) => id);
 
-        console.log(
-          "Extracted Public IDs to Delete for Other:",
-          publicIdsToDeleteFromGallery
-        );
-
         if (publicIdsToDeleteFromGallery.length > 0) {
-          console.log(
-            "Attempting to delete Other gallery from Cloudinary:",
-            publicIdsToDeleteFromGallery
-          );
           try {
-            const deleteResult = await cloudinary.api.delete_resources(
+            await cloudinary.api.delete_resources(
               publicIdsToDeleteFromGallery,
               { type: "upload", resource_type: "image" }
             );
-            console.log(
-              "Cloudinary delete result for Other gallery:",
-              deleteResult
-            );
           } catch (cloudinaryError) {
             console.error(
-              "Failed to delete specific gallery images from Cloudinary for Other:",
+              "Failed to delete specific gallery images from Cloudinary for Space:",
               cloudinaryError
             );
           }
-        } else {
-          console.log(
-            "No valid public IDs extracted from urlsToDelete for Other."
-          );
         }
-
         currentImages = currentImages.filter(
           (imgUrl) => !urlsToDelete.includes(imgUrl)
         );
-        console.log(
-          "Filtered Other image array after deletions:",
-          currentImages
-        );
-      } else {
-        console.log("No Other images marked for deletion.");
       }
 
       const newGalleryImageFiles = req.files?.images || [];
@@ -324,18 +279,17 @@ router.put(
         currentImages = [...currentImages, ...newGalleryPaths];
       }
       if (
-        JSON.stringify(currentImages) !== JSON.stringify(otherToUpdate.images)
+        JSON.stringify(currentImages) !== JSON.stringify(spaceToUpdate.images)
       ) {
         updateFields.images = currentImages;
       }
 
-      otherToUpdate.set(updateFields);
-      const updatedOther = await otherToUpdate.save();
+      spaceToUpdate.set(updateFields);
+      const updatedSpace = await spaceToUpdate.save();
 
-      console.log(`Other item ${otherId} updated successfully.`);
-      res.status(200).json(updatedOther);
+      res.status(200).json(updatedSpace);
     } catch (error) {
-      console.error(`Admin: Error updating other item ${otherId}:`, error);
+      console.error(`Admin: Error updating space item ${spaceId}:`, error);
       if (req.files?.image?.[0]?.filename)
         await cloudinary.uploader
           .destroy(req.files.image[0].filename)
@@ -357,7 +311,7 @@ router.put(
           .status(400)
           .json({ message: "Validation failed", errors: messages });
       }
-      res.status(500).json({ message: "Server error updating other item" });
+      res.status(500).json({ message: "Server error updating space item" });
     }
   }
 );
@@ -381,51 +335,40 @@ function extractPublicId(imageUrl) {
 }
 
 router.delete("/:id", async (req, res) => {
-  const otherId = req.params.id;
-  console.log(`Admin Deleting other item ${otherId}`);
+  const spaceId = req.params.id;
   try {
-    const otherToDelete = await Other.findById(otherId);
-    if (!otherToDelete)
-      return res.status(404).json({ message: "Other item not found" });
+    const spaceToDelete = await Space.findById(spaceId);
+    if (!spaceToDelete)
+      return res.status(404).json({ message: "Space item not found" });
 
     const publicIdsToDelete = [];
-    if (otherToDelete.image && otherToDelete.image !== DEFAULT_IMAGE_URL) {
-      const mainPublicId = extractPublicId(otherToDelete.image);
+    if (spaceToDelete.image && spaceToDelete.image !== DEFAULT_IMAGE_URL) {
+      const mainPublicId = extractPublicId(spaceToDelete.image);
       if (mainPublicId) publicIdsToDelete.push(mainPublicId);
     }
-    if (otherToDelete.images && otherToDelete.images.length > 0) {
-      otherToDelete.images.forEach((imgUrl) => {
+    if (spaceToDelete.images && spaceToDelete.images.length > 0) {
+      spaceToDelete.images.forEach((imgUrl) => {
         const galleryPublicId = extractPublicId(imgUrl);
         if (galleryPublicId) publicIdsToDelete.push(galleryPublicId);
       });
     }
 
     if (publicIdsToDelete.length > 0) {
-      console.log("Deleting Cloudinary resources:", publicIdsToDelete);
       await cloudinary.api
         .delete_resources(publicIdsToDelete, {
           type: "upload",
           resource_type: "image",
         })
         .catch((e) =>
-          console.error("Cloudinary deletion error during other delete:", e)
+          console.error("Cloudinary deletion error during space delete:", e)
         );
-    } else {
-      console.log(
-        "No user-uploaded Cloudinary resources to delete for this item."
-      );
     }
 
-    await Other.findByIdAndDelete(otherId);
+    await Space.findByIdAndDelete(spaceId);
 
-    const folderPath = `tingitingi_rentals/others/${otherId}`;
-    console.log(`Attempting to delete Cloudinary folder: ${folderPath}`);
+    const folderPath = `tingitingi_rentals/spaces/${spaceId}`;
     try {
-      const folderDeleteResult = await cloudinary.api.delete_folder(folderPath);
-      console.log(
-        `Cloudinary folder deletion result for ${folderPath}:`,
-        folderDeleteResult
-      );
+      await cloudinary.api.delete_folder(folderPath);
     } catch (folderError) {
       console.warn(
         `Could not delete Cloudinary folder ${folderPath}. It might not be empty or might not exist. Error:`,
@@ -433,13 +376,12 @@ router.delete("/:id", async (req, res) => {
       );
     }
 
-    console.log(`Other item ${otherId} deleted successfully.`);
     res
       .status(200)
-      .json({ message: `Other item ${otherId} deleted successfully.` });
+      .json({ message: `Space item ${spaceId} deleted successfully.` });
   } catch (error) {
-    console.error(`Admin: Error deleting other item ${otherId}:`, error);
-    res.status(500).json({ message: "Server error deleting other item" });
+    console.error(`Admin: Error deleting space item ${spaceId}:`, error);
+    res.status(500).json({ message: "Server error deleting space item" });
   }
 });
 

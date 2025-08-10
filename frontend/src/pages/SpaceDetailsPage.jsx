@@ -10,18 +10,18 @@ import "yet-another-react-lightbox/styles.css";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import './AdminCommon.css';
 import styles from './HouseDetailsPage.module.css';
-import { fetchPublicOtherDetails } from '../utils/api';
+import { fetchPublicSpaceDetails } from '../utils/api';
 
-export default function OtherDetailsPage({ t, language }) {
+export default function SpaceDetailsPage({ t, language }) {
   const [details, setDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const { otherId } = useParams();
+  const { spaceId } = useParams();
 
   useEffect(() => {
-    if (!otherId) {
+    if (!spaceId) {
       setError("Item ID not found in URL.");
       setIsLoading(false);
       return;
@@ -32,11 +32,11 @@ export default function OtherDetailsPage({ t, language }) {
       setError(null);
       setDetails(null);
       try {
-        const data = await fetchPublicOtherDetails(otherId);
-        if (!data || !data.id) { throw new Error(t('invalidOtherData', { default: 'Invalid Item Data' })); }
+        const data = await fetchPublicSpaceDetails(spaceId);
+        if (!data || !data.id) { throw new Error(t('invalidSpaceData', { default: 'Invalid Item Data' })); }
         setDetails(data);
       } catch (fetchError) {
-        console.error("Error fetching other item details:", fetchError);
+        console.error("Error fetching space item details:", fetchError);
         setError(fetchError.message || t('fetchErrorGeneric', { default: 'Failed to fetch details.' }));
       } finally {
         setIsLoading(false);
@@ -44,7 +44,7 @@ export default function OtherDetailsPage({ t, language }) {
     };
 
     loadDetails();
-  }, [otherId, t]);
+  }, [spaceId, t]);
 
   const handleLightboxViewChange = useCallback(({ index: currentIndex }) => {
     setLightboxIndex(currentIndex);
@@ -57,7 +57,7 @@ export default function OtherDetailsPage({ t, language }) {
     return (<div className="admin-page-container"><h1>{t('errorFetching')}</h1><p>{error}</p><Link to="/" className="button is-link is-light mt-4">{t('backToHome', { default: 'Back Home' })}</Link></div>);
   }
   if (!details) {
-    return (<div className="admin-page-container"><h1>{t('otherNotFound', { default: 'Item details could not be loaded.' })}</h1><Link to="/" className="button is-link is-light mt-4">{t('backToHome', { default: 'Back Home' })}</Link></div>);
+    return (<div className="admin-page-container"><h1>{t('spaceNotFound', { default: 'Item details could not be loaded.' })}</h1><Link to="/" className="button is-link is-light mt-4">{t('backToHome', { default: 'Back Home' })}</Link></div>);
   }
 
   const longDescriptionText = details.longDescription?.[language] || details.longDescription?.['en'] || t('noDescriptionAvailable', { default: 'No description available.'});

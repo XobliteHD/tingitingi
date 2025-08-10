@@ -1,31 +1,31 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AdminOtherForm from '../components/AdminOtherForm';
+import AdminSpaceForm from '../components/AdminSpaceForm';
 import './AdminCommon.css';
 import toast from 'react-hot-toast';
-import { createAdminOther } from '../utils/api';
+import { createAdminSpace } from '../utils/api';
 
-export default function AdminAddOtherPage({ t }) {
+export default function AdminAddSpacePage({ t }) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const handleCreateOther = async (formData) => {
+    const handleCreateSpace = async (formData) => {
         setIsLoading(true);
         setError(null);
         try {
-            const responseData = await createAdminOther(formData);
-            console.log('Other created successfully:', responseData);
-            toast.success(t('adminAddOtherSuccessMsg', { default: 'Other created successfully!' }));
-            navigate('/admin/others');
+            const responseData = await createAdminSpace(formData);
+            console.log('Space created successfully:', responseData);
+            toast.success(t('adminAddSpaceSuccessMsg', { default: 'Space created successfully!' }));
+            navigate('/admin/spaces');
         } catch (err) {
-            console.error("Failed to create other item:", err);
+            console.error("Failed to create space item:", err);
             if (err.message === "Unauthorized" || err.message === "Authentication required.") {
                  toast.error(t('authenticationRequired', { default: "Authentication required. Redirecting..."}));
                  setTimeout(() => navigate('/admin/login'), 1500);
             } else {
-                 setError(err.message || t('adminAddOtherErrorMsg', { default: 'Failed to create item.' }));
-                 toast.error(err.message || t('adminAddOtherErrorMsg', { default: 'Failed to create item.' }));
+                 setError(err.message || t('adminAddSpaceErrorMsg', { default: 'Failed to create item.' }));
+                 toast.error(err.message || t('adminAddSpaceErrorMsg', { default: 'Failed to create item.' }));
             }
         } finally {
             setIsLoading(false);
@@ -35,16 +35,16 @@ export default function AdminAddOtherPage({ t }) {
     return (
         <div className="admin-page-container">
             <h1 className={`title is-3 admin-page-title`}>
-                 {t('adminAddOtherPageTitle', { default: 'Add New Other Item' })}
+                 {t('adminAddSpacePageTitle', { default: 'Add New Space Item' })}
             </h1>
             {error && <div className="notification is-danger is-light mb-4"><button className="delete" onClick={() => setError(null)}></button>{error}</div>}
             <div className="mb-4 admin-back-link-container">
-                 <Link to="/admin/others" className="button is-link is-light is-small">
-                      ← {t('adminBackToOthersList', { default: 'Back to Others List' })}
+                 <Link to="/admin/spaces" className="button is-link is-light is-small">
+                      ← {t('adminBackToSpacesList', { default: 'Back to Spaces List' })}
                  </Link>
             </div>
             <div className="admin-form-container">
-                <AdminOtherForm onSubmit={handleCreateOther} isLoading={isLoading} t={t} />
+                <AdminSpaceForm onSubmit={handleCreateSpace} isLoading={isLoading} t={t} />
             </div>
         </div>
     );

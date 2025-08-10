@@ -42,9 +42,17 @@ export default function AdminDashboardPage({ t = (key) => key }) {
                 </div>
                  <div className="column is-one-third">
                     <div className="box has-text-centered">
-                        <h2 className="title is-5">{t('adminDashboardManageOthers')}</h2>
-                        <Link to="/admin/others" className="button is-link">
-                            {t('adminDashboardGoToOthers')}
+                        <h2 className="title is-5">{t('adminDashboardManageSpaces')}</h2>
+                        <Link to="/admin/spaces" className="button is-link">
+                            {t('adminDashboardGoToSpaces')}
+                        </Link>
+                    </div>
+                </div>
+                <div className="column is-one-third">
+                    <div className="box has-text-centered">
+                        <h2 className="title is-5">{t('adminDashboardManageBlog')}</h2>
+                        <Link to="/admin/blog" className="button is-link">
+                            {t('adminDashboardGoToBlog')}
                         </Link>
                     </div>
                 </div>

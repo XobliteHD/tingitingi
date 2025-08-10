@@ -36,6 +36,32 @@ const houseSchema = new mongoose.Schema(
         trim: true,
       },
     },
+      presentationContent: {
+      fr: { type: String, trim: true },
+      en: { type:String, trim: true },
+    },
+    virtualTourVideos: [{
+      title: { type: String, required: true, trim: true },
+      videoId: { type: String, required: true, trim: true },
+    }],
+    reviews: [{
+      title: { type: String, required: true, trim: true }, 
+      shortQuote: { type: String, required: true, trim: true }, 
+      fullText: { type: String, required: true }, 
+      author: { type: String, required: true, trim: true },
+      imageUrl: { type: String, required: false }
+    }],
+    // NEW FIELD: Array of URLs for curated display photos
+    displayPhotosUrls: {
+      type: [String],
+      required: false,
+      default: [],
+    },
+    googlePhotosLink: {
+      type: String,
+      required: false,
+      trim: true,
+    },
     image: {
       type: String,
       required: false,
